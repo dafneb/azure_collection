@@ -1,2 +1,2 @@
 # Usefull tools and scripts for Azure
-Usefull tools and scripts for Azure
+Useful tools and scripts for Azure
