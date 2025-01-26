@@ -348,8 +348,11 @@ function Get-VirtualMachineDetails {
     }
 
     process {
-        Write-Verbose -Message "Get details of virtual machine"
+        Write-Verbose -Message "Get details of virtual machine $($VMName)"
         $machine = Get-AZVm -ResourceGroupName $ResourceGroupName -Name $VMName
+        Write-Verbose -Message "Publisher: $($machine.StorageProfile.ImageReference.Publisher)"
+        Write-Verbose -Message "Offer: $($machine.StorageProfile.ImageReference.Offer)"
+        Write-Verbose -Message "SKU: $($machine.StorageProfile.ImageReference.Sku)"
         $machine.NetworkProfile | Format-Table
         $script:dataInventory += "`t`t`tSize: $($machine.HardwareProfile.VmSize)"
         $script:dataInventory += "`t`t`tvCPU: $($machine.HardwareProfile.VmSizeProperties.VCPUsAvailable)"
@@ -414,8 +417,10 @@ function Get-KeyVaultDetails {
 
     process {
 
-        Write-Verbose -Message "Get details of key vault"
+        Write-Verbose -Message "Get details of key vault $($KeyVaultName)"
         $kv = Get-AzKeyVault -VaultName $KeyVaultName
+        Write-Verbose -Message "Sku: $($kv.Sku)"
+        Write-Verbose -Message "VaultUri: $($kv.VaultUri)"
         $script:dataInventory += "`t`t`tSku: $($kv.Sku)"
         $script:dataInventory += "`t`t`tVaultUri: $($kv.VaultUri)"
         $script:dataInventory += "`t`t`tEnabledForDeployment: $($kv.EnabledForDeployment)"
@@ -478,8 +483,11 @@ function Get-StorageAccountDetails {
 
     process {
 
-        Write-Verbose -Message "Get details of storage account"
+        Write-Verbose -Message "Get details of storage account $($StorageName)"
         $account = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageName
+        Write-Verbose -Message "Sku: $($account.Sku.Name)"
+        Write-Verbose -Message "Kind: $($account.Kind)"
+        Write-Verbose -Message "ProvisioningState: $($account.ProvisioningState)"
         $script:dataInventory += "`t`t`tSku: $($account.Sku.Name)"
         $script:dataInventory += "`t`t`tKind: $($account.Kind)"
         $script:dataInventory += "`t`t`tProvisioningState: $($account.ProvisioningState)"
@@ -558,6 +566,7 @@ function Get-ResourceForResourceGroup {
 
             Get-RolesForResource -ResourceId $resItem.ResourceId
 
+            Write-Verbose -Message "Details about resources: $($processDetails)"
             if ($processDetails) {
 
                 switch ($resItem.ResourceType)
@@ -580,6 +589,8 @@ function Get-ResourceForResourceGroup {
                 }
     
             }
+
+            Write-Verbose -Message "Audit of resources: $($processAudits)"
 
         }
 
