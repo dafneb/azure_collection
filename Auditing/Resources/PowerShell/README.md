@@ -17,7 +17,7 @@ Result is stored at many different files.
  
 * "azure-roles-\<tenant-id\>.csv"
   * Contains list of roles directly assigned to people, groups and managed identities
-  * Roles assigned via managed groups or inherited are not included
+  * Roles assigned via management groups or inherited are not included, so that's why you could check what's really assigned to exact resource.
 
 * "azure-ips-\<tenant-id\>.csv"
   * List of public IPs used at components
