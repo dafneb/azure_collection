@@ -359,6 +359,12 @@ function Get-SqlServerDetails {
         $script:dataInventory += "`t`t`tMinimalTlsVersion: $($server.MinimalTlsVersion)"
         $script:dataInventory += "`t`t`tPublicNetworkAccess: $($server.PublicNetworkAccess)"
         $script:dataInventory += "`t`t`tRestrictOutboundNetworkAccess: $($server.RestrictOutboundNetworkAccess)"
+        $script:dataInventory += "`t`t`tNetworkRules:"
+        $networkRules = Get-AzSqlServerVirtualNetworkRule -ResourceGroupName $ResourceGroupName -ServerName $ServerName
+        $networkRules | ForEach-Object {
+            $rule = $_
+            $script:dataInventory += "`t`t`t`t$($rule.VirtualNetworkRuleName): $($rule.VirtualNetworkSubnetId) ($($rule.State))"
+        }
         $script:dataInventory += "`t`t`tFirewallInboundRules:"
         $fwInboudRules = Get-AzSqlServerFirewallRule -ResourceGroupName $ResourceGroupName -ServerName $ServerName
         $fwInboudRules | ForEach-Object {
