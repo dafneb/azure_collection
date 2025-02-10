@@ -350,10 +350,10 @@ function Get-VirtualMachineDetails {
     process {
         Write-Verbose -Message "Get details of virtual machine $($VMName)"
         $machine = Get-AZVm -ResourceGroupName $ResourceGroupName -Name $VMName
+        Write-Verbose -Message "Size: $($machine.HardwareProfile.VmSize)"
         Write-Verbose -Message "Publisher: $($machine.StorageProfile.ImageReference.Publisher)"
         Write-Verbose -Message "Offer: $($machine.StorageProfile.ImageReference.Offer)"
         Write-Verbose -Message "SKU: $($machine.StorageProfile.ImageReference.Sku)"
-        $machine.NetworkProfile | Format-Table
         $script:dataInventory += "`t`t`tSize: $($machine.HardwareProfile.VmSize)"
         $script:dataInventory += "`t`t`tvCPU: $($machine.HardwareProfile.VmSizeProperties.VCPUsAvailable)"
         $script:dataInventory += "`t`t`tvCPU per Core: $($machine.HardwareProfile.VmSizeProperties.VCPUsPerCore)"
@@ -361,7 +361,9 @@ function Get-VirtualMachineDetails {
         $script:dataInventory += "`t`t`t`tPublisher: $($machine.StorageProfile.ImageReference.Publisher)"
         $script:dataInventory += "`t`t`t`tOffer: $($machine.StorageProfile.ImageReference.Offer)"
         $script:dataInventory += "`t`t`t`tSKU: $($machine.StorageProfile.ImageReference.Sku)"
+        $script:dataOSystems += [PSCustomObject]@{Publisher="$($machine.StorageProfile.ImageReference.Publisher)"; Offer="$($machine.StorageProfile.ImageReference.Offer)"; SKU="$($machine.StorageProfile.ImageReference.Sku)"; ResourceType="Microsoft.Compute/virtualMachines"; ResourceName="$($VMName)"}
         $script:dataInventory += "`t`t`tComputerName: $($machine.OSProfile.ComputerName)"
+        $script:dataInventory += "`t`t`tFullyQualifiedDomainName: $($machine.FullyQualifiedDomainName)"
         $script:dataInventory += "`t`t`tOSName: $($machine.OsName)"
         $script:dataInventory += "`t`t`tAdminUserName: $($machine.OSProfile.AdminUsername)"
         if ($machine.OSProfile.LinuxConfiguration) {
@@ -374,20 +376,108 @@ function Get-VirtualMachineDetails {
         }
         if ($machine.OSProfile.WindowsConfiguration) {
             $script:dataInventory += "`t`t`tWindowsConfiguration:"
-            #$script:dataInventory += "`t`t`t`txxx: $($machine.xxx)"
+            $script:dataInventory += "`t`t`t`tEnableAutomaticUpdates: $($machine.OSProfile.WindowsConfiguration.EnableAutomaticUpdates)"
+            $script:dataInventory += "`t`t`t`tEnableVMAgentPlatformUpdates: $($machine.OSProfile.WindowsConfiguration.EnableVMAgentPlatformUpdates)"
+            $script:dataInventory += "`t`t`t`tAssessmentMode: $($machine.OSProfile.WindowsConfiguration.PatchSettings.AssessmentMode)"
+            $script:dataInventory += "`t`t`t`tPatchMode: $($machine.OSProfile.WindowsConfiguration.PatchSettings.PatchMode)"
+            $script:dataInventory += "`t`t`t`tProvisionVMAgent: $($machine.OSProfile.WindowsConfiguration.ProvisionVMAgent)"
+            $script:dataInventory += "`t`t`t`tTimeZone: $($machine.OSProfile.WindowsConfiguration.TimeZone)"
         }
-        #$script:dataInventory += "`t`t`txxx: $($machine.xxx)"
-        #$script:dataInventory += "`t`t`txxx: $($machine.xxx)"
-        #$script:dataInventory += "`t`t`txxx: $($machine.xxx)"
-        #$script:dataInventory += "`t`t`txxx: $($machine.xxx)"
-        #$script:dataInventory += "`t`t`txxx: $($machine.xxx)"
-        #$script:dataInventory += "`t`t`txxx: $($machine.xxx)"
-        #$script:dataInventory += "`t`t`txxx: $($machine.xxx)"
-        #$script:dataInventory += "`t`t`txxx: $($machine.xxx)"
-        #$script:dataInventory += "`t`t`txxx: $($machine.xxx)"
-        #$script:dataInventory += "`t`t`txxx: $($machine.xxx)"
-        #$script:dataInventory += "`t`t`txxx: $($machine.xxx)"
-        #$script:dataInventory += "`t`t`txxx: $($machine.xxx)"
+        $script:dataInventory += "`t`t`tStorageProfile:"
+        $osDisk = Get-AzDisk -DiskName $machine.StorageProfile.OsDisk.Name -ResourceGroupName $machine.ResourceGroupName
+        $script:dataInventory += "`t`t`t`tOS Disk: $($osDisk.Name)"
+        $script:dataInventory += "`t`t`t`t`tOS Type: $($osDisk.OsType)"
+        $script:dataInventory += "`t`t`t`t`tHyper-V Gen: $($osDisk.HyperVGeneration)"
+        $script:dataInventory += "`t`t`t`t`tSKU: $($osDisk.Sku.Name) ($($osDisk.Sku.Tier))"
+        $script:dataInventory += "`t`t`t`t`tTier: $($osDisk.Tier)"
+        $script:dataInventory += "`t`t`t`t`tDiskSizeGB: $($osDisk.DiskSizeGB)"
+        $script:dataInventory += "`t`t`t`t`tPublicNetworkAccess: $($osDisk.PublicNetworkAccess)"
+        $script:dataInventory += "`t`t`t`t`tNetworkAccessPolicy: $($osDisk.NetworkAccessPolicy)"
+        $script:dataInventory += "`t`t`t`t`tEncryption.Type: $($osDisk.Encryption.Type)"
+        $machine.StorageProfile.DataDisks | ForEach-Object {
+            $dataDisk = Get-AzDisk -DiskName $_.Name -ResourceGroupName $machine.ResourceGroupName
+            $script:dataInventory += "`t`t`t`tData Disk: $($dataDisk.Name)"
+            $script:dataInventory += "`t`t`t`t`tSKU: $($dataDisk.Sku.Name) ($($dataDisk.Sku.Tier))"
+            $script:dataInventory += "`t`t`t`t`tTier: $($dataDisk.Tier)"
+            $script:dataInventory += "`t`t`t`t`tDiskSizeGB: $($dataDisk.DiskSizeGB)"
+            $script:dataInventory += "`t`t`t`t`tPublicNetworkAccess: $($dataDisk.PublicNetworkAccess)"
+            $script:dataInventory += "`t`t`t`t`tNetworkAccessPolicy: $($dataDisk.NetworkAccessPolicy)"
+            $script:dataInventory += "`t`t`t`t`tEncryption.Type: $($dataDisk.Encryption.Type)"
+        }
+        $script:dataInventory += "`t`t`tEncryptionAtHost: $($machine.SecurityProfile.EncryptionAtHost)"
+        $script:dataInventory += "`t`t`tSecurityType: $($machine.SecurityProfile.SecurityType)"
+        $script:dataInventory += "`t`t`tSecureBootEnabled: $($machine.SecurityProfile.UefiSettings.SecureBootEnabled)"
+        $script:dataInventory += "`t`t`tVTpmEnabled: $($machine.SecurityProfile.UefiSettings.VTpmEnabled)"
+        $script:dataInventory += "`t`t`tNetworkInterfaces:"
+        $machine.NetworkProfile.NetworkInterfaces | ForEach-Object {
+            $script:dataInventory += "`t`t`t`tInterface:"
+            $script:dataInventory += "`t`t`t`t`t[Primary=$($_.Primary)] ID: $($_.Id)"
+            $networkInt = Get-AzNetworkInterface -ResourceId $_.Id
+            $script:dataInventory += "`t`t`t`t`tName: $($networkInt.Name)"
+            $script:dataInventory += "`t`t`t`t`tEnableAcceleratedNetworking: $($networkInt.EnableAcceleratedNetworking)"
+            $script:dataInventory += "`t`t`t`t`tEnableIPForwarding: $($networkInt.EnableIPForwarding)"
+            $script:dataInventory += "`t`t`t`t`tVnetEncryptionSupported: $($networkInt.VnetEncryptionSupported)"
+            $script:dataInventory += "`t`t`t`t`tDefaultOutboundConnectivityEnabled: $($networkInt.DefaultOutboundConnectivityEnabled)"
+            $networkInt.IpConfigurations | ForEach-Object {
+                $ipconfig = $_
+                $script:dataInventory += "`t`t`t`t`tIPConfiguration:"
+                $script:dataInventory += "`t`t`t`t`t`t[Primary=$($ipconfig.Primary)] Name: $($ipconfig.Name)"
+                # TODO: Add AppGateway and LoadBalancer reference? There could be relevant PublicIP
+                # FIXME: ApplicationGatewayBackendAddressPools
+                # FIXME: LoadBalancerBackendAddressPools
+                $script:dataInventory += "`t`t`t`t`t`tApplicationSecurityGroups:"
+                $ipconfig.ApplicationSecurityGroups | ForEach-Object {
+                    $script:dataInventory += "`t`t`t`t`t`t`t$($_.Id)"
+                }
+                $script:dataInventory += "`t`t`t`t`t`tSubnet: $($ipconfig.Subnet.Id)"
+                $script:dataInventory += "`t`t`t`t`t`tPrivateIpAddress: $($ipconfig.PrivateIpAddress)"
+                $script:dataInventory += "`t`t`t`t`t`tPublicIp.Id: $($ipconfig.PublicIpAddress.Id)"
+                if ($ipconfig.PublicIpAddress.Id.Length -gt 0) {
+                    $resourcePublicIp = Get-AzResource -ResourceId $ipconfig.PublicIpAddress.Id
+                    $publicIpItem = Get-AzPublicIpAddress -ResourceGroupName $networkInt.ResourceGroupName -Name $resourcePublicIp.Name
+                    $script:dataInventory += "`t`t`t`t`t`tPublicIp.Name: $($publicIpItem.Name)"
+                    $script:dataInventory += "`t`t`t`t`t`tPublicIp.IpAddress: $($publicIpItem.IpAddress)"
+                    $script:dataIps += [PSCustomObject]@{PublicIp="$($publicIpItem.IpAddress)"; ResourceType="Microsoft.Compute/virtualMachines"; ResourceName="$($VMName)"}
+                }
+            }
+            $script:dataInventory += "`t`t`t`t`t`tNetworkSecurityGroup:"
+            if ($networkInt.NetworkSecurityGroup.Id.Length -gt 0) {
+                $resourceNSG = Get-AzResource -ResourceId $networkInt.NetworkSecurityGroup.Id
+                $NSG = Get-AzNetworkSecurityGroup -Name $resourceNSG.Name -ResourceGroupName $resourceNSG.ResourceGroupName
+                $NSG.SecurityRules | ForEach-Object {
+                    $nsgRule = $_
+                    $script:dataInventory += "`t`t`t`t`t`t`tName: $($nsgRule.Name)"
+                    $nsgRuleSrcArray = @()
+                    $nsgRuleDstArray = @()
+                    $nsgRuleSrcPortArray = @()
+                    $nsgRuleDstPortArray = @()
+                    $nsgRule.SourceApplicationSecurityGroups | ForEach-Object { $nsgRuleSrcArray += $_.Name }
+                    $nsgRule.SourceAddressPrefix | ForEach-Object { $nsgRuleSrcArray += $_ }
+                    $nsgRule.SourcePortRange | ForEach-Object { $nsgRuleSrcPortArray += $_ }
+                    $nsgRule.DestinationApplicationSecurityGroups | ForEach-Object { $nsgRuleDstArray += $_.Name}
+                    $nsgRule.DestinationAddressPrefix | ForEach-Object { $nsgRuleDstArray += $_ }
+                    $nsgRule.DestinationPortRange | ForEach-Object { $nsgRuleDstPortArray += $_ }
+                    $nsgRuleSrcText = ""
+                    $nsgRuleSrcText += $nsgRuleSrcArray | Join-String -Separator ", "
+                    $nsgRuleSrcText += " ($($nsgRuleSrcPortArray | Join-String -Separator ", "))"
+                    $nsgRuleDstText = ""
+                    $nsgRuleDstText += $nsgRuleDstArray | Join-String -Separator ", "
+                    $nsgRuleDstText += " ($($nsgRuleDstPortArray | Join-String -Separator ", "))"
+                    $script:dataInventory += "`t`t`t`t`t`t`t`t[$($nsgRule.Priority) $($nsgRule.Access) - $($nsgRule.Direction)]: $($nsgRule.Protocol) $($nsgRuleSrcText) -> $($nsgRuleDstText)"
+
+                }
+                
+            }
+
+        }
+        $script:dataInventory += "`t`t`tExtensions:"
+        $machine.Extensions | ForEach-Object {
+            $script:dataInventory += "`t`t`t`tName: $($_.Name); Publisher: $($_.Publisher)"
+        }
+        $script:dataInventory += "`t`t`tPlan:"
+        $script:dataInventory += "`t`t`t`tPublisher: $($machine.Plan.Publisher)"
+        $script:dataInventory += "`t`t`t`tName: $($machine.Plan.Name)"
+        $script:dataInventory += "`t`t`t`tProduct: $($machine.Plan.Product)"
 
     }
 
@@ -707,8 +797,8 @@ function Get-Subscriptions {
 $timeStart = Get-Date
 
 # Some variables ...
-$processDetails = $false
-$processAudits = $false
+$processDetails = $true
+$processAudits = $true
 
 # Get actual Azure context ...
 $context = Get-AzContext
@@ -717,6 +807,7 @@ $context = Get-AzContext
 $fileInventory = "azure-inventory-$($context.Tenant).txt"
 $fileRoles = "azure-roles-$($context.Tenant).csv"
 $fileIps = "azure-ips-$($context.Tenant).csv"
+$fileIpsScan = "azure-ips-scan-$($context.Tenant).txt"
 $fileUrls = "azure-urls-$($context.Tenant).csv"
 $fileAudit = "azure-audit-$($context.Tenant).csv" 
 $fileOSystems = "azure-osystems-$($context.Tenant).csv" 
@@ -738,6 +829,7 @@ Get-Subscriptions -Context $context
 Clear-Content -Path $fileInventory
 Clear-Content -Path $fileRoles
 Clear-Content -Path $fileIps
+Clear-Content -Path $fileIpsScan
 Clear-Content -Path $fileUrls
 Clear-Content -Path $fileAudit
 Clear-Content -Path $fileOSystems
@@ -747,6 +839,7 @@ Clear-Content -Path $fileLanguages
 $script:dataInventory | ForEach-Object { Add-Content -Path $fileInventory -Value $_ }
 $script:dataRoles | Export-Csv -Path $fileRoles -NoTypeInformation
 $script:dataIps | Export-Csv -Path $fileIps -NoTypeInformation
+$script:dataIps | ForEach-Object { Add-Content -Path $fileIpsScan -Value $_.'PublicIP' }
 $script:dataUrls | Export-Csv -Path $fileUrls -NoTypeInformation
 $script:dataAudit | Export-Csv -Path $fileAudit -NoTypeInformation
 $script:dataOSystems | Export-Csv -Path $fileOSystems -NoTypeInformation
