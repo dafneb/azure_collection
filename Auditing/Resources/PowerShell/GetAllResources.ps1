@@ -325,6 +325,67 @@ function Get-RolesForResource {
 
 }
 
+# Function: Get details about Azure SQL Server
+function Get-SqlServerDetails {
+
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true,
+        HelpMessage="Resource group name.")]
+        [ValidateNotNullOrEmpty()]
+        [string] $ResourceGroupName,
+
+        [Parameter(Mandatory=$true,
+        HelpMessage="SQL server name.")]
+        [ValidateNotNullOrEmpty()]
+        [string] $ServerName
+    )
+
+    begin {
+        Write-Verbose -Message "Begin of Get-SqlServerDetails"
+        Show-ProgressBarLevel3 -ActivityName "Getting details" -ObjectName "AzureSQLServer" -Index 0 -Max 100
+    
+    }
+
+    process {
+        Write-Verbose -Message "Get details of Azure SQL server $($ServerName)"
+        $server = Get-AzSqlServer -ResourceGroupName $ResourceGroupName -ServerName $ServerName
+        Write-Verbose -Message "ServerName: $($server.ServerName)"
+        Write-Verbose -Message "ServerVersion: $($server.ServerVersion)"
+        Write-Verbose -Message "FullyQualifiedDomainName: $($server.FullyQualifiedDomainName)"
+        $script:dataInventory += "`t`t`tServerName: $($server.ServerName)"
+        $script:dataInventory += "`t`t`tServerVersion: $($server.ServerVersion)"
+        $script:dataInventory += "`t`t`tFullyQualifiedDomainName: $($server.FullyQualifiedDomainName)"
+        $script:dataInventory += "`t`t`tMinimalTlsVersion: $($server.MinimalTlsVersion)"
+        $script:dataInventory += "`t`t`tPublicNetworkAccess: $($server.PublicNetworkAccess)"
+        $script:dataInventory += "`t`t`tRestrictOutboundNetworkAccess: $($server.RestrictOutboundNetworkAccess)"
+        $script:dataInventory += "`t`t`tFirewallInboundRules:"
+        $fwInboudRules = Get-AzSqlServerFirewallRule -ResourceGroupName $ResourceGroupName -ServerName $ServerName
+        $fwInboudRules | ForEach-Object {
+            $rule = $_
+            $script:dataInventory += "`t`t`t`t$($rule.FirewallRuleName): $($rule.StartIpAddress) - $($rule.EndIpAddress)"
+        }
+        $fw6InboundRules = Get-AzSqlServerIpv6FirewallRule -ResourceGroupName $ResourceGroupName -ServerName $ServerName
+        $fw6InboundRules | ForEach-Object {
+            $rule = $_
+            $script:dataInventory += "`t`t`t`t$($rule.Ipv6FirewallRuleName): $($rule.StartIpAddress) - $($rule.EndIpAddress)"
+        }
+        $script:dataInventory += "`t`t`tFirewallOutboundRules:"
+        $fwOutboundRules = Get-AzSqlServerOutboundFirewallRule -ResourceGroupName $ResourceGroupName -ServerName $ServerName
+        $fwOutboundRules | ForEach-Object {
+            $rule = $_
+            $script:dataInventory += "`t`t`t`tAllowedFQDN: $($rule.AllowedFQDN)"
+        }
+
+    }
+
+    end {
+        Hide-ProgressBarLevel3
+        Write-Verbose -Message "End of Get-SqlServerDetails"
+
+    }
+}
+
 # Function: Get details about Virtual Machine
 function Get-VirtualMachineDetails {
 
@@ -675,6 +736,11 @@ function Get-ResourceForResourceGroup {
                     {
                         Write-Verbose -Message 'Get details for VirtualMachine'
                         Get-VirtualMachineDetails -ResourceGroupName $resItem.ResourceGroupName -VMName $resItem.Name
+                    }
+                    'Microsoft.Sql/servers'
+                    {
+                        Write-Verbose -Message 'Get details for AzureSQLServer'
+                        Get-SqlServerDetails -ResourceGroupName $resItem.ResourceGroupName -ServerName $resItem.Name
                     }
                 }
     
