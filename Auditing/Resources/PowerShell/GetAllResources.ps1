@@ -325,6 +325,233 @@ function Get-RolesForResource {
 
 }
 
+<#
+.SYNOPSIS
+    Retrieves detailed information about a specified Azure Web App.
+
+.DESCRIPTION
+    The Get-WebAppDetails function retrieves detailed information about a specified Azure Web App, including its configuration, state, and various settings.
+
+.PARAMETER ResourceGroupName
+    The name of the resource group that contains the Web App.
+
+.PARAMETER WebAppName
+    The name of the Web App to retrieve details for.
+
+.EXAMPLE
+    Get-WebAppDetails -ResourceGroupName "resource-group" -WebAppName "web-app-name"
+    This command retrieves details for the Web App named "web-app-name" in the "resource-group" resource group.
+
+.NOTES
+    Author: David Burel (@dafneb)
+    Date: February 14, 2025
+    Version: 1.0
+
+#>
+function Get-WebAppDetails {
+
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true,
+        HelpMessage="Resource group name.")]
+        [ValidateNotNullOrEmpty()]
+        [string] $ResourceGroupName,
+
+        [Parameter(Mandatory=$true,
+        HelpMessage="Web app name.")]
+        [ValidateNotNullOrEmpty()]
+        [string] $WebAppName
+    )
+
+    begin {
+        Write-Verbose -Message "Begin of Get-WebAppDetails"
+        Show-ProgressBarLevel3 -ActivityName "Getting details" -ObjectName "WebApp" -Index 0 -Max 100
+    
+    }
+
+    process {
+        Write-Verbose -Message "Get details of web app $($WebAppName)"
+        $webApp = Get-AzWebApp -ResourceGroupName $ResourceGroupName -Name $WebAppName
+        Write-Verbose -Message "Name: $($webApp.Name)"
+        Write-Verbose -Message "DefaultHostName: $($webApp.DefaultHostName)"
+        $script:dataInventory += "`t`t`tName: $($webApp.Name)"
+        $script:dataInventory += "`t`t`tKind: $($webApp.Kind)"
+        $script:dataInventory += "`t`t`tEnabled: $($webApp.Enabled)"
+        $script:dataInventory += "`t`t`tDefaultHostName: $($webApp.DefaultHostName)"
+        $script:dataInventory += "`t`t`tHostNames:"
+        $webApp.HostNames | ForEach-Object { 
+            $appHost = $_
+            $script:dataInventory += "`t`t`t`t$($appHost)"
+            $webApp.SiteConfig.VirtualApplications | ForEach-Object {
+                $app = $_
+                $script:dataUrls += [PSCustomObject]@{PublicURL="https://$($appHost)$($app.VirtualPath)"; ResourceType="Microsoft.Web/sites"; ResourceName="$($WebAppName)"}
+            }
+        }
+        $script:dataInventory += "`t`t`tState: $($webApp.State)"
+        $script:dataInventory += "`t`t`tUsageState: $($webApp.UsageState)"
+        $script:dataInventory += "`t`t`tAvailabilityState: $($webApp.AvailabilityState)"
+        $script:dataInventory += "`t`t`tServerFarmId: $($webApp.ServerFarmId)"
+        $script:dataInventory += "`t`t`tHostingEnvironmentProfile: $($webApp.HostingEnvironmentProfile)"
+        $script:dataInventory += "`t`t`tGitRemoteName: $($webApp.GitRemoteName)"
+        $script:dataInventory += "`t`t`tGitRemoteUri: $($webApp.GitRemoteUri)"
+        $script:dataInventory += "`t`t`tGitRemoteUsername: $($webApp.GitRemoteUsername)"
+        $script:dataInventory += "`t`t`tAzureStorageAccounts: $($webApp.AzureStorageAccounts)"
+        $script:dataInventory += "`t`t`tAzureStoragePath: $($webApp.AzureStoragePath)"
+        $script:dataInventory += "`t`t`tRepositorySiteName: $($webApp.RepositorySiteName)"
+        $script:dataInventory += "`t`t`tVnetInfo: $($webApp.VnetInfo)"
+        $script:dataInventory += "`t`t`tVirtualNetworkSubnetId: $($webApp.VirtualNetworkSubnetId)"
+        $script:dataInventory += "`t`t`tHttpsOnly: $($webApp.HttpsOnly)"
+        $script:dataInventory += "`t`t`tClientAffinityEnabled: $($webApp.ClientAffinityEnabled)"
+        $script:dataInventory += "`t`t`tClientCertEnabled: $($webApp.ClientCertEnabled)"
+        $script:dataInventory += "`t`t`tClientCertMode: $($webApp.ClientCertMode)"
+        ## SiteConfig
+        $script:dataInventory += "`t`t`tSiteConfig:"
+        # SCM ...        
+        $script:dataInventory += "`t`t`t`tScmType: $($webApp.SiteConfig.ScmType)"
+        $script:dataInventory += "`t`t`t`tScmMinTlsVersion: $($webApp.SiteConfig.ScmMinTlsVersion)"
+        $script:dataInventory += "`t`t`t`tScmIpSecurityRestrictionsUseMain: $($webApp.SiteConfig.ScmIpSecurityRestrictionsUseMain)"
+        $script:dataInventory += "`t`t`t`tScmIpSecurityRestrictions:"
+        $webApp.SiteConfig.ScmIpSecurityRestrictions | ForEach-Object {
+            $rule = $_
+            $script:dataInventory += "`t`t`t`t`t$($rule.Name) - $($rule.Action) [Priority=$($rule.Priority)]:"
+            $script:dataInventory += "`t`t`t`t`t`tDescription: $($rule.Description)"
+            $script:dataInventory += "`t`t`t`t`t`tIP: $($rule.IpAddress) ($($rule.SubnetMask))"
+            $script:dataInventory += "`t`t`t`t`t`tVnetSubnetResourceId: $($rule.VnetSubnetResourceId)"
+            $script:dataInventory += "`t`t`t`t`t`tVnetTrafficTag: $($rule.VnetTrafficTag)"
+            $script:dataInventory += "`t`t`t`t`t`tSubnetTrafficTag: $($rule.SubnetTrafficTag)"
+        }
+        # Application ...
+        $script:dataInventory += "`t`t`t`tAlwaysOn: $($webApp.SiteConfig.AlwaysOn)"
+        $script:dataInventory += "`t`t`t`tAppCommandLine: $($webApp.SiteConfig.AppCommandLine)"
+        $script:dataInventory += "`t`t`t`tUse32BitWorkerProcess: $($webApp.SiteConfig.Use32BitWorkerProcess)"
+        $script:dataInventory += "`t`t`t`tApiDefinition: $($webApp.SiteConfig.ApiDefinition.Url)"
+        $script:dataInventory += "`t`t`t`tApiManagementConfig: $($webApp.SiteConfig.ApiManagementConfig.Id)"
+        $script:dataInventory += "`t`t`t`tDetailedErrorLoggingEnabled: $($webApp.SiteConfig.DetailedErrorLoggingEnabled)"
+        # Languages ... 
+        $script:dataInventory += "`t`t`t`tNetFrameworkVersion: $($webApp.SiteConfig.NetFrameworkVersion)"
+        if ($webApp.SiteConfig.NetFrameworkVersion.Length -gt 0) {
+            $script:dataLanguages += [PSCustomObject]@{Language=".NET"; Version="$($webApp.SiteConfig.NetFrameworkVersion)"; ResourceType="Microsoft.Web/sites"; ResourceName="$($WebAppName)"}
+        }
+        $script:dataInventory += "`t`t`t`tPhpVersion: $($webApp.SiteConfig.PhpVersion)"
+        if ($webApp.SiteConfig.PhpVersion.Length -gt 0) {
+            $script:dataLanguages += [PSCustomObject]@{Language="PHP"; Version="$($webApp.SiteConfig.PhpVersion)"; ResourceType="Microsoft.Web/sites"; ResourceName="$($WebAppName)"}
+        }
+        $script:dataInventory += "`t`t`t`tPythonVersion: $($webApp.SiteConfig.PythonVersion)"
+        if ($webApp.SiteConfig.PythonVersion.Length -gt 0) {
+            $script:dataLanguages += [PSCustomObject]@{Language="Python"; Version="$($webApp.SiteConfig.PythonVersion)"; ResourceType="Microsoft.Web/sites"; ResourceName="$($WebAppName)"}
+        }
+        $script:dataInventory += "`t`t`t`tNodeVersion: $($webApp.SiteConfig.NodeVersion)"
+        if ($webApp.SiteConfig.NodeVersion.Length -gt 0) {
+            $script:dataLanguages += [PSCustomObject]@{Language="Node.js"; Version="$($webApp.SiteConfig.NodeVersion)"; ResourceType="Microsoft.Web/sites"; ResourceName="$($WebAppName)"}
+        }
+        $script:dataInventory += "`t`t`t`tPowerShellVersion: $($webApp.SiteConfig.PowerShellVersion)"
+        if ($webApp.SiteConfig.PowerShellVersion.Length -gt 0) {
+            $script:dataLanguages += [PSCustomObject]@{Language="PowerShell"; Version="$($webApp.SiteConfig.PowerShellVersion)"; ResourceType="Microsoft.Web/sites"; ResourceName="$($WebAppName)"}
+        }
+        $script:dataInventory += "`t`t`t`tJavaVersion: $($webApp.SiteConfig.JavaVersion)"
+        if ($webApp.SiteConfig.JavaVersion.Length -gt 0) {
+            $script:dataLanguages += [PSCustomObject]@{Language="Java"; Version="$($webApp.SiteConfig.JavaVersion)"; ResourceType="Microsoft.Web/sites"; ResourceName="$($WebAppName)"}
+        }
+        $script:dataInventory += "`t`t`t`tJavaContainer: $($webApp.SiteConfig.JavaContainer)"
+        $script:dataInventory += "`t`t`t`tJavaContainerVersion: $($webApp.SiteConfig.JavaContainerVersion)"
+        $script:dataInventory += "`t`t`t`tLinuxFxVersion: $($webApp.SiteConfig.LinuxFxVersion)"
+        if ($webApp.SiteConfig.LinuxFxVersion.Length -gt 0) {
+            if ($webApp.SiteConfig.LinuxFxVersion.Contains('|')) {
+                $linuxFx = $webApp.SiteConfig.LinuxFxVersion -split '\|'
+                $linuxFx
+                if ($linuxFx[0] -eq "DOCKER") {
+                    $script:dataOSystems += [PSCustomObject]@{Publisher="Docker"; Offer="docker-image"; SKU="$($linuxFx[1])"; ResourceType="Microsoft.Web/sites"; ResourceName="$($WebAppName)"}
+                } elseif ($linuxFx[0] -eq "DOTNETCORE") {
+                    $script:dataLanguages += [PSCustomObject]@{Language=".NET Core"; Version="$($linuxFx[1])"; ResourceType="Microsoft.Web/sites"; ResourceName="$($WebAppName)"}
+                } elseif ($linuxFx[0] -eq "NODE") {
+                    $script:dataLanguages += [PSCustomObject]@{Language="Node.js"; Version="$($linuxFx[1])"; ResourceType="Microsoft.Web/sites"; ResourceName="$($WebAppName)"}
+                } elseif ($linuxFx[0] -eq "PHP") {
+                    $script:dataLanguages += [PSCustomObject]@{Language="PHP"; Version="$($linuxFx[1])"; ResourceType="Microsoft.Web/sites"; ResourceName="$($WebAppName)"}
+                } elseif ($linuxFx[0] -eq "PYTHON") {
+                    $script:dataLanguages += [PSCustomObject]@{Language="Python"; Version="$($linuxFx[1])"; ResourceType="Microsoft.Web/sites"; ResourceName="$($WebAppName)"}
+                } elseif ($linuxFx[0] -eq "RUBY") {
+                    $script:dataLanguages += [PSCustomObject]@{Language="Ruby"; Version="$($linuxFx[1])"; ResourceType="Microsoft.Web/sites"; ResourceName="$($WebAppName)"}
+                } else {
+                    $script:dataLanguages += [PSCustomObject]@{Language="$($linuxFx[0])"; Version="$($linuxFx[1])"; ResourceType="Microsoft.Web/sites"; ResourceName="$($WebAppName)"}
+                }
+            } else {
+                $script:dataLanguages += [PSCustomObject]@{Language="Linux"; Version="$($webApp.SiteConfig.LinuxFxVersion)"; ResourceType="Microsoft.Web/sites"; ResourceName="$($WebAppName)"}
+            }
+        }
+        $script:dataInventory += "`t`t`t`tWindowsFxVersion: $($webApp.SiteConfig.WindowsFxVersion)"
+        if ($webApp.SiteConfig.WindowsFxVersion.Length -gt 0) {
+            $script:dataLanguages += [PSCustomObject]@{Language="Windows"; Version="$($webApp.SiteConfig.WindowsFxVersion)"; ResourceType="Microsoft.Web/sites"; ResourceName="$($WebAppName)"}
+        }
+        # Network ...
+        $script:dataInventory += "`t`t`t`tHttp20Enabled: $($webApp.SiteConfig.Http20Enabled)"
+        $script:dataInventory += "`t`t`t`tMinTlsVersion: $($webApp.SiteConfig.MinTlsVersion)"
+        $script:dataInventory += "`t`t`t`tFtpsState: $($webApp.SiteConfig.FtpsState)"
+        $script:dataInventory += "`t`t`t`tPublicNetworkAccess: $($webApp.SiteConfig.PublicNetworkAccess)"
+        $script:dataInventory += "`t`t`t`tWebSocketsEnabled: $($webApp.SiteConfig.WebSocketsEnabled)"
+        $script:dataInventory += "`t`t`t`tIpSecurityRestrictions:"
+        $webApp.SiteConfig.IpSecurityRestrictions | ForEach-Object {
+            $rule = $_
+            $script:dataInventory += "`t`t`t`t`t$($rule.Name) - $($rule.Action) [Priority=$($rule.Priority)]:"
+            $script:dataInventory += "`t`t`t`t`t`tDescription: $($rule.Description)"
+            $script:dataInventory += "`t`t`t`t`t`tIP: $($rule.IpAddress) ($($rule.SubnetMask))"
+            $script:dataInventory += "`t`t`t`t`t`tVnetSubnetResourceId: $($rule.VnetSubnetResourceId)"
+            $script:dataInventory += "`t`t`t`t`t`tVnetTrafficTag: $($rule.VnetTrafficTag)"
+            $script:dataInventory += "`t`t`t`t`t`tSubnetTrafficTag: $($rule.SubnetTrafficTag)"
+        }
+        $script:dataInventory += "`t`t`t`tVirtualApplications:"
+        $webApp.SiteConfig.VirtualApplications | ForEach-Object {
+            $app = $_
+            $script:dataInventory += "`t`t`t`t`t$($app.VirtualPath) -> $($app.PhysicalPath)"
+        }
+        # Vnet ...
+        $script:dataInventory += "`t`t`t`tVnetName: $($webApp.SiteConfig.VnetName)"
+        $script:dataInventory += "`t`t`t`tVnetRouteAllEnabled: $($webApp.SiteConfig.VnetRouteAllEnabled)"
+        $script:dataInventory += "`t`t`t`tVnetPrivatePortsCount: $($webApp.SiteConfig.VnetPrivatePortsCount)"
+
+    }
+
+    end {
+        Hide-ProgressBarLevel3
+        Write-Verbose -Message "End of Get-WebAppDetails"
+
+    }
+}
+
+# Function: Get details about FunctionApp
+function Get-FunctionAppDetails {
+
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true,
+        HelpMessage="Resource group name.")]
+        [ValidateNotNullOrEmpty()]
+        [string] $ResourceGroupName,
+
+        [Parameter(Mandatory=$true,
+        HelpMessage="Function app name.")]
+        [ValidateNotNullOrEmpty()]
+        [string] $FunctionAppName
+    )
+
+    begin {
+        Write-Verbose -Message "Begin of Get-FunctionAppDetails"
+        Show-ProgressBarLevel3 -ActivityName "Getting details" -ObjectName "FunctionApp" -Index 0 -Max 100
+    
+    }
+
+    process {
+        Write-Verbose -Message "Get details of function app $($FunctionAppName)"
+        $functionApp = Get-AzFunctionApp -ResourceGroupName $ResourceGroupName -Name $FunctionAppName
+        # $functionApp | Format-List
+    }
+
+    end {
+        Hide-ProgressBarLevel3
+        Write-Verbose -Message "End of Get-FunctionAppDetails"
+
+    }
+}
+
 # Function: Get details about Azure SQL Server
 function Get-SqlServerDetails {
 
@@ -719,11 +946,12 @@ function Get-ResourceForResourceGroup {
             Show-ProgressBarLevel2 -Index $loopResourcesIndex -Max $resources.Count -ActivityName "Resources" -ObjectName "$($loopResourcesIndex) / $($resources.Count) - $($resItem.Name)"
 
             Write-Verbose -Message "Resource: $($resItem.Name); Type: $($resItem.ResourceType)"
-            $script:dataInventory += "`t`tResource: $($resItem.Name); Type: $($resItem.ResourceType)"
+            $script:dataInventory += "`t`tResource: $($resItem.Name); ResourceType: $($resItem.ResourceType)"
 
             Get-RolesForResource -ResourceId $resItem.ResourceId
 
             Write-Verbose -Message "Details about resources: $($processDetails)"
+            Write-Verbose -Message "Audit of resources: $($processAudits)"
             if ($processDetails) {
 
                 switch ($resItem.ResourceType)
@@ -748,11 +976,28 @@ function Get-ResourceForResourceGroup {
                         Write-Verbose -Message 'Get details for AzureSQLServer'
                         Get-SqlServerDetails -ResourceGroupName $resItem.ResourceGroupName -ServerName $resItem.Name
                     }
+                    'Microsoft.Web/sites'
+                    {
+                        Write-Verbose -Message 'Get details for WebApp or FunctionApp'
+                        Write-Verbose -Message "Kind: $($resItem.Kind)"
+                        $listKind = $resItem.Kind -split ','
+                        $listKind | ForEach-Object {
+                            $kindItem = $_
+                            if ($kindItem -eq "app")
+                            {
+                                Write-Verbose -Message 'Get details for WebApp'
+                                Get-WebAppDetails -ResourceGroupName $resItem.ResourceGroupName -WebAppName $resItem.Name
+                            }
+                            if ($kindItem -eq "functionapp")
+                            {
+                                Write-Verbose -Message 'Get details for FunctionApp'
+                                Get-FunctionAppDetails -ResourceGroupName $resItem.ResourceGroupName -FunctionAppName $resItem.Name
+                            }
+                        }
+                    }
                 }
     
             }
-
-            Write-Verbose -Message "Audit of resources: $($processAudits)"
 
         }
 
@@ -881,6 +1126,7 @@ $fileRoles = "azure-roles-$($context.Tenant).csv"
 $fileIps = "azure-ips-$($context.Tenant).csv"
 $fileIpsScan = "azure-ips-scan-$($context.Tenant).txt"
 $fileUrls = "azure-urls-$($context.Tenant).csv"
+$fileUrlsScan = "azure-urls-scan-$($context.Tenant).txt"
 $fileAudit = "azure-audit-$($context.Tenant).csv" 
 $fileOSystems = "azure-osystems-$($context.Tenant).csv" 
 $fileLanguages = "azure-languages-$($context.Tenant).csv"
@@ -903,6 +1149,7 @@ Clear-Content -Path $fileRoles
 Clear-Content -Path $fileIps
 Clear-Content -Path $fileIpsScan
 Clear-Content -Path $fileUrls
+Clear-Content -Path $fileUrlsScan
 Clear-Content -Path $fileAudit
 Clear-Content -Path $fileOSystems
 Clear-Content -Path $fileLanguages
@@ -913,6 +1160,7 @@ $script:dataRoles | Export-Csv -Path $fileRoles -NoTypeInformation
 $script:dataIps | Export-Csv -Path $fileIps -NoTypeInformation
 $script:dataIps | ForEach-Object { Add-Content -Path $fileIpsScan -Value $_.'PublicIP' }
 $script:dataUrls | Export-Csv -Path $fileUrls -NoTypeInformation
+$script:dataUrls | ForEach-Object { Add-Content -Path $fileUrlsScan -Value $_.'PublicURL' }
 $script:dataAudit | Export-Csv -Path $fileAudit -NoTypeInformation
 $script:dataOSystems | Export-Csv -Path $fileOSystems -NoTypeInformation
 $script:dataLanguages | Export-Csv -Path $fileLanguages -NoTypeInformation

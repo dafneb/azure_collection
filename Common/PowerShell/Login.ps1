@@ -1,2 +1,2 @@
 # Login to Azure ...
-Connect-AzAccount
+Connect-AzAccount -TenantId '<tenant-id>'
