@@ -1,6 +1,30 @@
 
 ### Progress bars functions
-# Function: Showing progress bar for subscription
+<#
+.SYNOPSIS
+    Displays a progress bar for subscription-related tasks.
+
+.DESCRIPTION
+    The Show-ProgressBarSubscription function provides a visual representation of the progress of subscription-related tasks. It calculates the percentage of completion based on the current index and the maximum number of objects, and displays a progress bar with the specified subscription name.
+
+.PARAMETER Index
+    The current index of the object being processed. This value should be between 0 and the maximum number of objects.
+
+.PARAMETER Max
+    The maximum number of objects to be processed. This value should be greater than 0.
+
+.PARAMETER SubName
+    The name of the subscription for which the progress is being displayed.
+
+.EXAMPLE
+    Show-ProgressBarSubscription -Index 5 -Max 100 -SubName "MySubscription"
+    This command displays a progress bar indicating that 5% of the task for "MySubscription" has been completed.
+
+.NOTES
+    Author: David Burel (@dafneb)
+    Date: February 17, 2025
+    Version: 1.0
+#>
 function Show-ProgressBarSubscription {
 
     param (
@@ -31,7 +55,22 @@ function Show-ProgressBarSubscription {
 
 }
 
-# Function: Hide progress bar for subscription
+<#
+.SYNOPSIS
+    Hides the progress bar for subscription-related tasks.
+
+.DESCRIPTION
+    The Hide-ProgressBarSubscription function is designed to hide the progress bar that was previously displayed for subscription-related tasks. It marks the progress bar as completed, clearing it from the display and indicating that the task is done.
+
+.EXAMPLE
+    Hide-ProgressBarSubscription
+    This command hides the progress bar for subscription-related tasks, marking it as completed.
+
+.NOTES
+    Author: David Burel (@dafneb)
+    Date: February 17, 2025
+    Version: 1.0
+#>
 function Hide-ProgressBarSubscription {
 
     $progParameters = @{
@@ -43,7 +82,34 @@ function Hide-ProgressBarSubscription {
 
 } 
 
-# Function: Showing progress bar for sub-process level 1
+<#
+.SYNOPSIS
+    Displays a progress bar for sub-process level 1 tasks.
+
+.DESCRIPTION
+    The Show-ProgressBarLevel1 function provides a visual representation of the progress of sub-process level 1 tasks. It calculates the percentage of completion based on the current index and the maximum number of objects, and displays a progress bar with the specified activity name and object name.
+
+.PARAMETER Index
+    The current index of the object being processed. This value should be between 0 and the maximum number of objects.
+
+.PARAMETER Max
+    The maximum number of objects to be processed. This value should be greater than 0.
+
+.PARAMETER ActivityName
+    The name of the activity for which the progress is being displayed.
+
+.PARAMETER ObjectName
+    The name of the object for which the progress is being displayed.
+
+.EXAMPLE
+    Show-ProgressBarLevel1 -Index 5 -Max 100 -ActivityName "Roles" -ObjectName "Getting all roles from Azure"
+    This command displays a progress bar indicating that 5% of the task for "Roles" has been completed, with the status "Getting all roles from Azure".
+
+.NOTES
+    Author: David Burel (@dafneb)
+    Date: February 17, 2025
+    Version: 1.0
+#>
 function Show-ProgressBarLevel1 {
 
     param (
@@ -80,7 +146,22 @@ function Show-ProgressBarLevel1 {
 
 }
 
-# Function: Hide progress bar for sub-process level 1
+<#
+.SYNOPSIS
+    Hides the progress bar for sub-process level 1 tasks.
+
+.DESCRIPTION
+    The Hide-ProgressBarLevel1 function is designed to hide the progress bar that was previously displayed for sub-process level 1 tasks. It marks the progress bar as completed, clearing it from the display and indicating that the task is done.
+
+.EXAMPLE
+    Hide-ProgressBarLevel1
+    This command hides the progress bar for sub-process level 1 tasks, marking it as completed.
+
+.NOTES
+    Author: David Burel (@dafneb)
+    Date: February 17, 2025
+    Version: 1.0
+#>
 function Hide-ProgressBarLevel1 {
 
     $progParameters = @{
@@ -93,7 +174,34 @@ function Hide-ProgressBarLevel1 {
 
 }
 
-# Function: Showing progress bar for sub-process level 2
+<#
+.SYNOPSIS
+    Displays a progress bar for sub-process level 2 tasks.
+
+.DESCRIPTION
+    The Show-ProgressBarLevel2 function provides a visual representation of the progress of sub-process level 2 tasks. It calculates the percentage of completion based on the current index and the maximum number of objects, and displays a progress bar with the specified activity name and object name.
+
+.PARAMETER Index
+    The current index of the object being processed. This value should be between 0 and the maximum number of objects.
+
+.PARAMETER Max
+    The maximum number of objects to be processed. This value should be greater than 0.
+
+.PARAMETER ActivityName
+    The name of the activity for which the progress is being displayed.
+
+.PARAMETER ObjectName
+    The name of the object for which the progress is being displayed.
+
+.EXAMPLE
+    Show-ProgressBarLevel2 -Index 5 -Max 100 -ActivityName "Resources" -ObjectName "Getting all resources from Azure"
+    This command displays a progress bar indicating that 5% of the task for "Resources" has been completed, with the status "Getting all resources from Azure".
+
+.NOTES
+    Author: David Burel (@dafneb)
+    Date: February 17, 2025
+    Version: 1.0
+#>
 function Show-ProgressBarLevel2 {
 
     param (
@@ -130,7 +238,22 @@ function Show-ProgressBarLevel2 {
 
 }
 
-# Function: Hide progress bar for sub-process level 2
+<#
+.SYNOPSIS
+    Hides the progress bar for sub-process level 2 tasks.
+
+.DESCRIPTION
+    The Hide-ProgressBarLevel2 function is designed to hide the progress bar that was previously displayed for sub-process level 2 tasks. It marks the progress bar as completed, clearing it from the display and indicating that the task is done.
+
+.EXAMPLE
+    Hide-ProgressBarLevel2
+    This command hides the progress bar for sub-process level 2 tasks, marking it as completed.
+
+.NOTES
+    Author: David Burel (@dafneb)
+    Date: February 17, 2025
+    Version: 1.0
+#>
 function Hide-ProgressBarLevel2 {
 
     $progParameters = @{
@@ -143,7 +266,34 @@ function Hide-ProgressBarLevel2 {
 
 }
 
-# Function: Showing progress bar for sub-process level 3
+<#
+.SYNOPSIS
+    Displays a progress bar for sub-process level 3 tasks.
+
+.DESCRIPTION
+    The Show-ProgressBarLevel3 function provides a visual representation of the progress of sub-process level 3 tasks. It calculates the percentage of completion based on the current index and the maximum number of objects, and displays a progress bar with the specified activity name and object name.
+
+.PARAMETER Index
+    The current index of the object being processed. This value should be between 0 and the maximum number of objects.
+
+.PARAMETER Max
+    The maximum number of objects to be processed. This value should be greater than 0.
+
+.PARAMETER ActivityName
+    The name of the activity for which the progress is being displayed.
+
+.PARAMETER ObjectName
+    The name of the object for which the progress is being displayed.
+
+.EXAMPLE
+    Show-ProgressBarLevel3 -Index 5 -Max 100 -ActivityName "Resources" -ObjectName "Getting all resources from Azure"
+    This command displays a progress bar indicating that 5% of the task for "Resources" has been completed, with the status "Getting all resources from Azure".
+
+.NOTES
+    Author: David Burel (@dafneb)
+    Date: February 17, 2025
+    Version: 1.0
+#>
 function Show-ProgressBarLevel3 {
 
     param (
@@ -180,7 +330,21 @@ function Show-ProgressBarLevel3 {
 
 }
 
-# Function: Hide progress bar for sub-process level 3
+<#
+.SYNOPSIS
+Hides the progress bar for Level 3 operations.
+
+.DESCRIPTION
+This function, Hide-ProgressBarLevel3, is designed to hide the progress bar specifically associated with Level 3 operations within a larger script or process. It provides a way to clear the visual clutter of a progress indicator when it's no longer needed, typically after a Level 3 task has completed or been canceled.  This helps maintain a clean and focused user interface. It assumes that a progress bar for Level 3 was previously displayed using other functions or mechanisms within the script.
+
+.EXAMPLE
+Hide-ProgressBarLevel3
+
+.NOTES
+    Author: David Burel (@dafneb)
+    Date: February 17, 2025
+    Version: 1.0
+#>
 function Hide-ProgressBarLevel3 {
 
     $progParameters = @{
@@ -196,7 +360,25 @@ function Hide-ProgressBarLevel3 {
 ###################################################################
 
 ### Azure functions
-# Function: Get list of roles for subscription and go through it
+<#
+.SYNOPSIS
+    Retrieves and processes the list of roles for a specified Azure subscription.
+
+.DESCRIPTION
+    The Get-RolesForSubscription function retrieves all role assignments for a specified Azure subscription. It processes each role assignment, displaying progress and collecting data about the roles, including the role name, principal name, principal type, and scope.
+
+.PARAMETER SubscriptionId
+    The ID of the Azure subscription for which to retrieve role assignments.
+
+.EXAMPLE
+    Get-RolesForSubscription -SubscriptionId "12345678-1234-1234-1234-123456789012"
+    This command retrieves and processes the list of roles for the Azure subscription with the ID "12345678-1234-1234-1234-123456789012".
+
+.NOTES
+    Author: David Burel (@dafneb)
+    Date: February 17, 2025
+    Version: 1.0
+#>
 function Get-RolesForSubscription {
 
     [CmdletBinding()]
@@ -239,7 +421,25 @@ function Get-RolesForSubscription {
 
 }
 
-# Function: Get list of roles for resource group and go through it
+<#
+.SYNOPSIS
+    Retrieves and processes the list of roles for a specified Azure resource group.
+
+.DESCRIPTION
+    The Get-RolesForResourceGroup function retrieves all role assignments for a specified Azure resource group. It processes each role assignment, displaying progress and collecting data about the roles, including the role name, principal name, principal type, and scope.
+
+.PARAMETER ResourceId
+    The ID of the Azure resource group for which to retrieve role assignments.
+
+.EXAMPLE
+    Get-RolesForResourceGroup -ResourceId "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/myResourceGroup"
+    This command retrieves and processes the list of roles for the Azure resource group with the specified resource ID.
+
+.NOTES
+    Author: David Burel (@dafneb)
+    Date: February 17, 2025
+    Version: 1.0
+#>
 function Get-RolesForResourceGroup {
 
     [CmdletBinding()]
@@ -282,7 +482,25 @@ function Get-RolesForResourceGroup {
 
 }
 
-# Function: Get list of roles for resource and go through it
+<#
+.SYNOPSIS
+    Retrieves and processes the list of roles for a specified Azure resource.
+
+.DESCRIPTION
+    The Get-RolesForResource function retrieves all role assignments for a specified Azure resource. It processes each role assignment, displaying progress and collecting data about the roles, including the role name, principal name, principal type, and scope.
+
+.PARAMETER ResourceId
+    The ID of the Azure resource for which to retrieve role assignments.
+
+.EXAMPLE
+    Get-RolesForResource -ResourceId "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/myResourceGroup/providers/Microsoft.Web/sites/myWebApp"
+    This command retrieves and processes the list of roles for the Azure resource with the specified resource ID.
+
+.NOTES
+    Author: David Burel (@dafneb)
+    Date: February 17, 2025
+    Version: 1.0
+#>
 function Get-RolesForResource {
 
     [CmdletBinding()]
@@ -542,7 +760,8 @@ function Get-FunctionAppDetails {
     process {
         Write-Verbose -Message "Get details of function app $($FunctionAppName)"
         $functionApp = Get-AzFunctionApp -ResourceGroupName $ResourceGroupName -Name $FunctionAppName
-        # $functionApp | Format-List
+        Write-Verbose -Message "Name: $($functionApp.Name)"
+
     }
 
     end {
@@ -552,7 +771,28 @@ function Get-FunctionAppDetails {
     }
 }
 
-# Function: Get details about Azure SQL Server
+<#
+.SYNOPSIS
+    Retrieves detailed information about a specified Azure SQL Server.
+
+.DESCRIPTION
+    The Get-SqlServerDetails function retrieves detailed information about a specified Azure SQL Server, including its configuration, state, and various settings. It collects data such as server name, version, domain name, network rules, and firewall rules.
+
+.PARAMETER ResourceGroupName
+    The name of the resource group that contains the SQL Server.
+
+.PARAMETER ServerName
+    The name of the SQL Server to retrieve details for.
+
+.EXAMPLE
+    Get-SqlServerDetails -ResourceGroupName "resource-group" -ServerName "sql-server-name"
+    This command retrieves details for the SQL Server named "sql-server-name" in the "resource-group" resource group.
+
+.NOTES
+    Author: David Burel (@dafneb)
+    Date: February 17, 2025
+    Version: 1.0
+#>
 function Get-SqlServerDetails {
 
     [CmdletBinding()]
@@ -619,7 +859,28 @@ function Get-SqlServerDetails {
     }
 }
 
-# Function: Get details about Virtual Machine
+<#
+.SYNOPSIS
+    Retrieves detailed information about a specified Azure Virtual Machine.
+
+.DESCRIPTION
+    The Get-VirtualMachineDetails function retrieves detailed information about a specified Azure Virtual Machine, including its hardware profile, storage profile, OS profile, network profile, and security profile. It collects data such as VM size, image reference, OS configuration, disk details, and network interfaces.
+
+.PARAMETER ResourceGroupName
+    The name of the resource group that contains the Virtual Machine.
+
+.PARAMETER VMName
+    The name of the Virtual Machine to retrieve details for.
+
+.EXAMPLE
+    Get-VirtualMachineDetails -ResourceGroupName "resource-group" -VMName "vm-name"
+    This command retrieves details for the Virtual Machine named "vm-name" in the "resource-group" resource group.
+
+.NOTES
+    Author: David Burel (@dafneb)
+    Date: February 17, 2025
+    Version: 1.0
+#>
 function Get-VirtualMachineDetails {
 
     [CmdletBinding()]
@@ -782,7 +1043,25 @@ function Get-VirtualMachineDetails {
     }
 }
 
-# Function: Get details about KeyVault
+<#
+.SYNOPSIS
+    Retrieves detailed information about a specified Azure Key Vault.
+
+.DESCRIPTION
+    The Get-KeyVaultDetails function retrieves detailed information about a specified Azure Key Vault, including its SKU, URI, and various settings. It collects data such as deployment settings, network access rules, and security configurations.
+
+.PARAMETER KeyVaultName
+    The name of the Key Vault to retrieve details for.
+
+.EXAMPLE
+    Get-KeyVaultDetails -KeyVaultName "myKeyVault"
+    This command retrieves details for the Key Vault named "myKeyVault".
+
+.NOTES
+    Author: David Burel (@dafneb)
+    Date: February 17, 2025
+    Version: 1.0
+#>
 function Get-KeyVaultDetails {
 
     [CmdletBinding()]
@@ -843,7 +1122,28 @@ function Get-KeyVaultDetails {
     }
 }
 
-# Function: Get details about StorageAccount
+<#
+.SYNOPSIS
+    Retrieves detailed information about a specified Azure Storage Account.
+
+.DESCRIPTION
+    The Get-StorageAccountDetails function retrieves detailed information about a specified Azure Storage Account, including its SKU, kind, provisioning state, and various settings. It collects data such as access tier, encryption settings, network rules, and public network access.
+
+.PARAMETER ResourceGroupName
+    The name of the resource group that contains the Storage Account.
+
+.PARAMETER StorageName
+    The name of the Storage Account to retrieve details for.
+
+.EXAMPLE
+    Get-StorageAccountDetails -ResourceGroupName "resource-group" -StorageName "storage-account-name"
+    This command retrieves details for the Storage Account named "storage-account-name" in the "resource-group" resource group.
+
+.NOTES
+    Author: David Burel (@dafneb)
+    Date: February 17, 2025
+    Version: 1.0
+#>
 function Get-StorageAccountDetails {
 
     [CmdletBinding()]
@@ -917,7 +1217,25 @@ function Get-StorageAccountDetails {
 
 }
 
-# Function: Get list of resources and go through it
+<#
+.SYNOPSIS
+    Retrieves and processes the list of resources for a specified Azure resource group.
+
+.DESCRIPTION
+    The Get-ResourceForResourceGroup function retrieves all resources for a specified Azure resource group. It processes each resource, displaying progress and collecting data about the resources, including their names and types. Additionally, it retrieves detailed information for specific resource types such as Storage Accounts, Key Vaults, Virtual Machines, SQL Servers, Web Apps, and Function Apps.
+
+.PARAMETER ResourceGroupName
+    The name of the resource group for which to retrieve resources.
+
+.EXAMPLE
+    Get-ResourceForResourceGroup -ResourceGroupName "myResourceGroup"
+    This command retrieves and processes the list of resources for the Azure resource group named "myResourceGroup".
+
+.NOTES
+    Author: David Burel (@dafneb)
+    Date: February 17, 2025
+    Version: 1.0
+#>
 function Get-ResourceForResourceGroup {
 
     [CmdletBinding()]
@@ -1010,7 +1328,25 @@ function Get-ResourceForResourceGroup {
 
 }
 
-# Function: Get list of resource groups and go through it
+<#
+.SYNOPSIS
+    Retrieves and processes the list of resource groups for a specified Azure subscription.
+
+.DESCRIPTION
+    The Get-ResourceGroupsForSubscription function retrieves all resource groups for a specified Azure subscription. It processes each resource group, displaying progress and collecting data about the resource groups, including their names and locations. Additionally, it retrieves detailed information for each resource group, including roles and resources within the group.
+
+.PARAMETER SubscriptionId
+    The ID of the Azure subscription for which to retrieve resource groups.
+
+.EXAMPLE
+    Get-ResourceGroupsForSubscription -SubscriptionId "12345678-1234-1234-1234-123456789012"
+    This command retrieves and processes the list of resource groups for the Azure subscription with the ID "12345678-1234-1234-1234-123456789012".
+
+.NOTES
+    Author: David Burel (@dafneb)
+    Date: February 17, 2025
+    Version: 1.0
+#>
 function Get-ResourceGroupsForSubscription {
 
     [CmdletBinding()]
@@ -1058,7 +1394,25 @@ function Get-ResourceGroupsForSubscription {
 
 }
 
-# Function: Get list of subscriptions and go through it
+<#
+.SYNOPSIS
+    Retrieves and processes the list of subscriptions for the specified Azure tenant.
+
+.DESCRIPTION
+    The Get-Subscriptions function retrieves all subscriptions for the specified Azure tenant. It processes each subscription, displaying progress and collecting data about the subscriptions, including their names, IDs, tenant IDs, and states. Additionally, it retrieves detailed information for each subscription, including roles and resource groups within the subscription.
+
+.PARAMETER Context
+    The Azure context for the actual tenant.
+
+.EXAMPLE
+    Get-Subscriptions -Context $context
+    This command retrieves and processes the list of subscriptions for the specified Azure tenant context.
+
+.NOTES
+    Author: David Burel (@dafneb)
+    Date: February 17, 2025
+    Version: 1.0
+#>
 function Get-Subscriptions {
 
     [CmdletBinding()]
