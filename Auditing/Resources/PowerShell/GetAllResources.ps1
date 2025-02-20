@@ -734,7 +734,29 @@ function Get-WebAppDetails {
     }
 }
 
-# Function: Get details about FunctionApp
+<#
+.SYNOPSIS
+    Retrieves detailed information about a specified Azure Function App.
+
+.DESCRIPTION
+    The Get-FunctionAppDetails function retrieves detailed information about a specified Azure Function App, including its configuration, state, and various settings.
+
+.PARAMETER ResourceGroupName
+    The name of the resource group that contains the Function App.
+
+.PARAMETER FunctionAppName
+    The name of the Function App to retrieve details for.
+
+.EXAMPLE
+    Get-FunctionAppDetails -ResourceGroupName "resource-group" -FunctionAppName "function-app-name"
+    This command retrieves details for the Function App named "function-app-name" in the "resource-group" resource group.
+
+.NOTES
+    Author: David Burel (@dafneb)
+    Date: February 20, 2025
+    Version: 1.0
+
+#>
 function Get-FunctionAppDetails {
 
     [CmdletBinding()]
