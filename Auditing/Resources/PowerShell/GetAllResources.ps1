@@ -676,21 +676,20 @@ function Get-WebAppDetails {
         if ($webApp.SiteConfig.LinuxFxVersion.Length -gt 0) {
             if ($webApp.SiteConfig.LinuxFxVersion.Contains('|')) {
                 $linuxFx = $webApp.SiteConfig.LinuxFxVersion -split '\|'
-                $linuxFx
-                if ($linuxFx[0] -eq "DOCKER") {
+                if ($linuxFx[0].ToUpper() -eq "DOCKER") {
                     $script:dataOSystems += [PSCustomObject]@{Publisher="Docker"; Offer="docker-image"; SKU="$($linuxFx[1])"; ResourceType="Microsoft.Web/sites"; ResourceName="$($WebAppName)"}
-                } elseif ($linuxFx[0] -eq "DOTNETCORE") {
+                } elseif ($linuxFx[0].ToUpper() -eq "DOTNETCORE") {
                     $script:dataLanguages += [PSCustomObject]@{Language=".NET Core"; Version="$($linuxFx[1])"; ResourceType="Microsoft.Web/sites"; ResourceName="$($WebAppName)"}
-                } elseif ($linuxFx[0] -eq "NODE") {
+                } elseif ($linuxFx[0].ToUpper() -eq "NODE") {
                     $script:dataLanguages += [PSCustomObject]@{Language="Node.js"; Version="$($linuxFx[1])"; ResourceType="Microsoft.Web/sites"; ResourceName="$($WebAppName)"}
-                } elseif ($linuxFx[0] -eq "PHP") {
+                } elseif ($linuxFx[0].ToUpper() -eq "PHP") {
                     $script:dataLanguages += [PSCustomObject]@{Language="PHP"; Version="$($linuxFx[1])"; ResourceType="Microsoft.Web/sites"; ResourceName="$($WebAppName)"}
-                } elseif ($linuxFx[0] -eq "PYTHON") {
+                } elseif ($linuxFx[0].ToUpper() -eq "PYTHON") {
                     $script:dataLanguages += [PSCustomObject]@{Language="Python"; Version="$($linuxFx[1])"; ResourceType="Microsoft.Web/sites"; ResourceName="$($WebAppName)"}
-                } elseif ($linuxFx[0] -eq "RUBY") {
+                } elseif ($linuxFx[0].ToUpper() -eq "RUBY") {
                     $script:dataLanguages += [PSCustomObject]@{Language="Ruby"; Version="$($linuxFx[1])"; ResourceType="Microsoft.Web/sites"; ResourceName="$($WebAppName)"}
                 } else {
-                    $script:dataLanguages += [PSCustomObject]@{Language="$($linuxFx[0])"; Version="$($linuxFx[1])"; ResourceType="Microsoft.Web/sites"; ResourceName="$($WebAppName)"}
+                    $script:dataLanguages += [PSCustomObject]@{Language="$($linuxFx[0].ToUpper())"; Version="$($linuxFx[1])"; ResourceType="Microsoft.Web/sites"; ResourceName="$($WebAppName)"}
                 }
             } else {
                 $script:dataLanguages += [PSCustomObject]@{Language="Linux"; Version="$($webApp.SiteConfig.LinuxFxVersion)"; ResourceType="Microsoft.Web/sites"; ResourceName="$($WebAppName)"}
@@ -761,6 +760,125 @@ function Get-FunctionAppDetails {
         Write-Verbose -Message "Get details of function app $($FunctionAppName)"
         $functionApp = Get-AzFunctionApp -ResourceGroupName $ResourceGroupName -Name $FunctionAppName
         Write-Verbose -Message "Name: $($functionApp.Name)"
+        Write-Verbose -Message "DefaultHostName: $($functionApp.DefaultHostName)"
+        $script:dataInventory += "`t`t`tName: $($functionApp.Name)"
+        $script:dataInventory += "`t`t`tKind: $($functionApp.Kind)"
+        $script:dataInventory += "`t`t`tEnabled: $($functionApp.Enabled)"
+        $script:dataInventory += "`t`t`tDefaultHostName: $($functionApp.DefaultHostName)"
+        $script:dataInventory += "`t`t`tHostName: $($functionApp.HostName)"
+        $script:dataInventory += "`t`t`tStatus: $($functionApp.Status)"
+        $script:dataInventory += "`t`t`tState: $($functionApp.State)"
+        $script:dataInventory += "`t`t`tUsageState: $($functionApp.UsageState)"
+        $script:dataInventory += "`t`t`tAvailabilityState: $($functionApp.AvailabilityState)"
+        $script:dataInventory += "`t`t`tServerFarmId: $($functionApp.ServerFarmId)"
+        $script:dataInventory += "`t`t`tAppServicePlan: $($functionApp.AppServicePlan)"
+        $script:dataInventory += "`t`t`tOSType: $($functionApp.OSType)"
+        $script:dataInventory += "`t`t`tRuntime: $($functionApp.Runtime)"
+        $script:dataInventory += "`t`t`tRuntimeName: $($functionApp.RuntimeName)"
+        $script:dataInventory += "`t`t`tRuntimeVersion: $($functionApp.RuntimeVersion)"
+        $script:dataInventory += "`t`t`tRepositorySiteName: $($functionApp.RepositorySiteName)"
+        $script:dataInventory += "`t`t`tVirtualNetworkSubnetId: $($functionApp.VirtualNetworkSubnetId)"
+        $script:dataInventory += "`t`t`tPublicNetworkAccess: $($functionApp.PublicNetworkAccess)"
+        $script:dataInventory += "`t`t`tHttpsOnly: $($functionApp.HttpsOnly)"
+        $script:dataInventory += "`t`t`tClientAffinityEnabled: $($functionApp.ClientAffinityEnabled)"
+        $script:dataInventory += "`t`t`tClientCertEnabled: $($functionApp.ClientCertEnabled)"
+        $script:dataInventory += "`t`t`tClientCertMode: $($functionApp.ClientCertMode)"
+        ## Config
+        $script:dataInventory += "`t`t`tConfig:"
+        # SCM ...        
+        $script:dataInventory += "`t`t`t`tScmType: $($functionApp.Config.ScmType)"
+        $script:dataInventory += "`t`t`t`tScmMinTlsVersion: $($functionApp.Config.ScmMinTlsVersion)"
+        $script:dataInventory += "`t`t`t`tScmIpSecurityRestrictionsUseMain: $($functionApp.Config.ScmIpSecurityRestrictionsUseMain)"
+        $script:dataInventory += "`t`t`t`tScmIpSecurityRestrictions:"
+        $functionApp.Config.ScmIpSecurityRestrictions | ForEach-Object {
+            $rule = $_
+            $script:dataInventory += "`t`t`t`t`t$($rule.Name) - $($rule.Action) [Priority=$($rule.Priority)]:"
+            $script:dataInventory += "`t`t`t`t`t`tDescription: $($rule.Description)"
+            $script:dataInventory += "`t`t`t`t`t`tIP: $($rule.IpAddress) ($($rule.SubnetMask))"
+            $script:dataInventory += "`t`t`t`t`t`tVnetSubnetResourceId: $($rule.VnetSubnetResourceId)"
+            $script:dataInventory += "`t`t`t`t`t`tVnetTrafficTag: $($rule.VnetTrafficTag)"
+            $script:dataInventory += "`t`t`t`t`t`tSubnetTrafficTag: $($rule.SubnetTrafficTag)"
+        }
+        # Application ...
+        $script:dataInventory += "`t`t`t`tAlwaysOn: $($functionApp.Config.AlwaysOn)"
+        $script:dataInventory += "`t`t`t`tAppCommandLine: $($functionApp.Config.AppCommandLine)"
+        $script:dataInventory += "`t`t`t`tUse32BitWorkerProcess: $($functionApp.Config.Use32BitWorkerProcess)"
+        $script:dataInventory += "`t`t`t`tApiDefinitionUrl: $($functionApp.Config.ApiDefinitionUrl)"
+        $script:dataInventory += "`t`t`t`tDetailedErrorLoggingEnabled: $($functionApp.Config.DetailedErrorLoggingEnabled)"
+        # Languages ... 
+        $script:dataInventory += "`t`t`t`tNetFrameworkVersion: $($functionApp.Config.NetFrameworkVersion)"
+        if ($functionApp.Config.NetFrameworkVersion.Length -gt 0) {
+            $script:dataLanguages += [PSCustomObject]@{Language=".NET"; Version="$($functionApp.Config.NetFrameworkVersion)"; ResourceType="Microsoft.Web/sites"; ResourceName="$($FunctionAppName)"}
+        }
+        $script:dataInventory += "`t`t`t`tPhpVersion: $($functionApp.Config.PhpVersion)"
+        if ($functionApp.Config.PhpVersion.Length -gt 0) {
+            $script:dataLanguages += [PSCustomObject]@{Language="PHP"; Version="$($functionApp.Config.PhpVersion)"; ResourceType="Microsoft.Web/sites"; ResourceName="$($FunctionAppName)"}
+        }
+        $script:dataInventory += "`t`t`t`tPythonVersion: $($functionApp.Config.PythonVersion)"
+        if ($functionApp.Config.PythonVersion.Length -gt 0) {
+            $script:dataLanguages += [PSCustomObject]@{Language="Python"; Version="$($functionApp.Config.PythonVersion)"; ResourceType="Microsoft.Web/sites"; ResourceName="$($FunctionAppName)"}
+        }
+        $script:dataInventory += "`t`t`t`tNodeVersion: $($functionApp.Config.NodeVersion)"
+        if ($functionApp.Config.NodeVersion.Length -gt 0) {
+            $script:dataLanguages += [PSCustomObject]@{Language="Node.js"; Version="$($functionApp.Config.NodeVersion)"; ResourceType="Microsoft.Web/sites"; ResourceName="$($FunctionAppName)"}
+        }
+        $script:dataInventory += "`t`t`t`tPowerShellVersion: $($functionApp.Config.PowerShellVersion)"
+        if ($functionApp.Config.PowerShellVersion.Length -gt 0) {
+            $script:dataLanguages += [PSCustomObject]@{Language="PowerShell"; Version="$($functionApp.Config.PowerShellVersion)"; ResourceType="Microsoft.Web/sites"; ResourceName="$($FunctionAppName)"}
+        }
+        $script:dataInventory += "`t`t`t`tJavaVersion: $($functionApp.Config.JavaVersion)"
+        if ($functionApp.Config.JavaVersion.Length -gt 0) {
+            $script:dataLanguages += [PSCustomObject]@{Language="Java"; Version="$($functionApp.Config.JavaVersion)"; ResourceType="Microsoft.Web/sites"; ResourceName="$($FunctionAppName)"}
+        }
+        $script:dataInventory += "`t`t`t`tJavaContainer: $($functionApp.Config.JavaContainer)"
+        $script:dataInventory += "`t`t`t`tJavaContainerVersion: $($functionApp.Config.JavaContainerVersion)"
+        $script:dataInventory += "`t`t`t`tLinuxFxVersion: $($functionApp.Config.LinuxFxVersion)"
+        if ($functionApp.Config.LinuxFxVersion.Length -gt 0) {
+            if ($functionApp.Config.LinuxFxVersion.Contains('|')) {
+                $linuxFx = $functionApp.Config.LinuxFxVersion -split '\|'
+                if ($linuxFx[0].ToUpper() -eq "DOCKER") {
+                    $script:dataOSystems += [PSCustomObject]@{Publisher="Docker"; Offer="docker-image"; SKU="$($linuxFx[1])"; ResourceType="Microsoft.Web/sites"; ResourceName="$($FunctionAppName)"}
+                } elseif ($linuxFx[0].ToUpper() -eq "DOTNETCORE") {
+                    $script:dataLanguages += [PSCustomObject]@{Language=".NET Core"; Version="$($linuxFx[1])"; ResourceType="Microsoft.Web/sites"; ResourceName="$($FunctionAppName)"}
+                } elseif ($linuxFx[0].ToUpper() -eq "NODE") {
+                    $script:dataLanguages += [PSCustomObject]@{Language="Node.js"; Version="$($linuxFx[1])"; ResourceType="Microsoft.Web/sites"; ResourceName="$($FunctionAppName)"}
+                } elseif ($linuxFx[0].ToUpper() -eq "PHP") {
+                    $script:dataLanguages += [PSCustomObject]@{Language="PHP"; Version="$($linuxFx[1])"; ResourceType="Microsoft.Web/sites"; ResourceName="$($FunctionAppName)"}
+                } elseif ($linuxFx[0].ToUpper() -eq "PYTHON") {
+                    $script:dataLanguages += [PSCustomObject]@{Language="Python"; Version="$($linuxFx[1])"; ResourceType="Microsoft.Web/sites"; ResourceName="$($FunctionAppName)"}
+                } elseif ($linuxFx[0].ToUpper() -eq "RUBY") {
+                    $script:dataLanguages += [PSCustomObject]@{Language="Ruby"; Version="$($linuxFx[1])"; ResourceType="Microsoft.Web/sites"; ResourceName="$($FunctionAppName)"}
+                } else {
+                    $script:dataLanguages += [PSCustomObject]@{Language="$($linuxFx[0].ToUpper())"; Version="$($linuxFx[1])"; ResourceType="Microsoft.Web/sites"; ResourceName="$($FunctionAppName)"}
+                }
+            } else {
+                $script:dataLanguages += [PSCustomObject]@{Language="Linux"; Version="$($functionApp.Config.LinuxFxVersion)"; ResourceType="Microsoft.Web/sites"; ResourceName="$($FunctionAppName)"}
+            }
+        }
+        $script:dataInventory += "`t`t`t`tWindowsFxVersion: $($functionApp.Config.WindowsFxVersion)"
+        if ($functionApp.Config.WindowsFxVersion.Length -gt 0) {
+            $script:dataLanguages += [PSCustomObject]@{Language="Windows"; Version="$($functionApp.Config.WindowsFxVersion)"; ResourceType="Microsoft.Web/sites"; ResourceName="$($FunctionAppName)"}
+        }
+        # Network ...
+        $script:dataInventory += "`t`t`t`tHttp20Enabled: $($functionApp.Config.Http20Enabled)"
+        $script:dataInventory += "`t`t`t`tMinTlsVersion: $($functionApp.Config.MinTlsVersion)"
+        $script:dataInventory += "`t`t`t`tFtpsState: $($functionApp.Config.FtpsState)"
+        $script:dataInventory += "`t`t`t`tPublicNetworkAccess: $($functionApp.Config.PublicNetworkAccess)"
+        $script:dataInventory += "`t`t`t`tWebSocketsEnabled: $($functionApp.Config.WebSocketsEnabled)"
+        $script:dataInventory += "`t`t`t`tIpSecurityRestrictions:"
+        $functionApp.Config.IpSecurityRestrictions | ForEach-Object {
+            $rule = $_
+            $script:dataInventory += "`t`t`t`t`t$($rule.Name) - $($rule.Action) [Priority=$($rule.Priority)]:"
+            $script:dataInventory += "`t`t`t`t`t`tDescription: $($rule.Description)"
+            $script:dataInventory += "`t`t`t`t`t`tIP: $($rule.IpAddress) ($($rule.SubnetMask))"
+            $script:dataInventory += "`t`t`t`t`t`tVnetSubnetResourceId: $($rule.VnetSubnetResourceId)"
+            $script:dataInventory += "`t`t`t`t`t`tVnetTrafficTag: $($rule.VnetTrafficTag)"
+            $script:dataInventory += "`t`t`t`t`t`tSubnetTrafficTag: $($rule.SubnetTrafficTag)"
+        }
+        # Vnet ...
+        $script:dataInventory += "`t`t`t`tVnetName: $($functionApp.Config.VnetName)"
+        $script:dataInventory += "`t`t`t`tVnetRouteAllEnabled: $($functionApp.Config.VnetRouteAllEnabled)"
+        $script:dataInventory += "`t`t`t`tVnetPrivatePortsCount: $($functionApp.Config.VnetPrivatePortsCount)"
 
     }
 
