@@ -543,6 +543,255 @@ function Get-RolesForResource {
 
 }
 
+
+function Get-AppGatewayDetails {
+    
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true,
+        HelpMessage="Resource group name.")]
+        [ValidateNotNullOrEmpty()]
+        [string] $ResourceGroupName,
+
+        [Parameter(Mandatory=$true,
+        HelpMessage="Application Gateway name.")]
+        [ValidateNotNullOrEmpty()]
+        [string] $AppGatewayName
+    )
+
+    begin {
+        Write-Verbose -Message "Begin of Get-AppGatewayDetails"
+        Show-ProgressBarLevel3 -ActivityName "Getting details" -ObjectName "Application Gateway" -Index 0 -Max 100
+    
+    }
+
+    process {
+        Write-Verbose -Message "Get details of application gateway $($AppGatewayName)"
+        $appGateway = Get-AzApplicationGateway -ResourceGroupName $ResourceGroupName -Name $AppGatewayName
+        Write-Verbose -Message "Name: $($appGateway.Name)"
+        Write-Verbose -Message "SKU: $($appGateway.Sku.Name)"
+        Write-Verbose -Message "State: $($appGateway.ProvisioningState)"
+        Write-Verbose -Message "Operational State: $($appGateway.OperationalState)"
+        $script:dataInventory += "`t`t`tName: $($appGateway.Name)"
+        $script:dataInventory += "`t`t`tSKU: $($appGateway.Sku.Tier) ($($appGateway.Sku.Family))"
+        $script:dataInventory += "`t`t`tState: $($appGateway.ProvisioningState)"
+        $script:dataInventory += "`t`t`tOperational State: $($appGateway.OperationalState)"
+        $script:dataInventory += "`t`t`tEnableHttp2: $($appGateway.EnableHttp2)"
+        $script:dataInventory += "`t`t`tEnableFips: $($appGateway.EnableFips)"
+        $script:dataInventory += "`t`t`tEnableRequestBuffering: $($appGateway.EnableRequestBuffering)"
+        $script:dataInventory += "`t`t`tEnableResponseBuffering: $($appGateway.EnableResponseBuffering)"
+        $script:dataInventory += "`t`t`tZones: $($appGateway.Zones -join ', ')"
+        ## Web Application Firewall Configuration
+        if ($appGateway.WebApplicationFirewallConfiguration) {
+            $script:dataInventory += "`t`t`tWeb Application Firewall Configuration:"
+            $script:dataInventory += "`t`t`t`tEnabled: $($appGateway.WebApplicationFirewallConfiguration.Enabled)"
+            $script:dataInventory += "`t`t`t`tFirewallMode: $($appGateway.WebApplicationFirewallConfiguration.FirewallMode)"
+            $script:dataInventory += "`t`t`t`tRuleSetType: $($appGateway.WebApplicationFirewallConfiguration.RuleSetType)"
+            $script:dataInventory += "`t`t`t`tRuleSetVersion: $($appGateway.WebApplicationFirewallConfiguration.RuleSetVersion)"
+        }
+        ## Firewall Policy
+        if ($appGateway.FirewallPolicy) {
+            $script:dataInventory += "`t`t`tFirewall Policy:"
+            $script:dataInventory += "`t`t`t`tId: $($appGateway.FirewallPolicy.Id)"
+        }
+        ## SSL / TLS
+        $script:dataInventory += "`t`t`tSSL/TLS:"
+        # SSL Policy ...
+        $script:dataInventory += "`t`t`t`tPolicy:"
+        $script:dataInventory += "`t`t`t`t`tName: $($appGateway.SslPolicy.PolicyName)"
+        $script:dataInventory += "`t`t`t`t`tType: $($appGateway.SslPolicy.PolicyType)"
+        $script:dataInventory += "`t`t`t`t`tMinProtocolVersion: $($appGateway.SslPolicy.MinProtocolVersion)"
+        $script:dataInventory += "`t`t`t`t`tCipherSuites:"
+        $appGateway.SslPolicy.CipherSuiteOrder | ForEach-Object {
+            $cipher = $_
+            $script:dataInventory += "`t`t`t`t`t`t$($cipher)"
+        }
+        # SSL Certificates ...
+        $script:dataInventory += "`t`t`t`tCertificates:"
+        $appGateway.SslCertificates | ForEach-Object {
+            $cert = $_
+            $script:dataInventory += "`t`t`t`t`tName: $($cert.Name)"
+            $script:dataInventory += "`t`t`t`t`tProvisioningState: $($cert.ProvisioningState)"
+            $script:dataInventory += "`t`t`t`t`tPublicCertData: $($cert.PublicCertData)"
+            $script:dataInventory += "`t`t`t`t`tKeyVaultSecretId: $($cert.KeyVaultSecretId)"
+        }
+        $script:dataInventory += "`t`t`t`tTrusted root certificates:"
+        $appGateway.TrustedRootCertificates | ForEach-Object {
+            $cert = $_
+            $script:dataInventory += "`t`t`t`t`tName: $($cert.Name)"
+            $script:dataInventory += "`t`t`t`t`tType: $($cert.Type)"
+            $script:dataInventory += "`t`t`t`t`tProvisioningState: $($cert.ProvisioningState)"
+        }
+        $script:dataInventory += "`t`t`t`tTrusted client certificates:"
+        $appGateway.TrustedClientCertificates | ForEach-Object {
+            $cert = $_
+            $script:dataInventory += "`t`t`t`t`tName: $($cert.Name)"
+            $script:dataInventory += "`t`t`t`t`tType: $($cert.Type)"
+            $script:dataInventory += "`t`t`t`t`tProvisioningState: $($cert.ProvisioningState)"
+            $script:dataInventory += "`t`t`t`t`tClientCertIssuerDN: $($cert.ClientCertIssuerDN)"
+        }
+        $script:dataInventory += "`t`t`t`tAuthentication certificates:"
+        $appGateway.AuthenticationCertificates | ForEach-Object {
+            $cert = $_
+            $script:dataInventory += "`t`t`t`t`tName: $($cert.Name)"
+            $script:dataInventory += "`t`t`t`t`tType: $($cert.Type)"
+            $script:dataInventory += "`t`t`t`t`tProvisioningState: $($cert.ProvisioningState)"
+        }
+        ## Frontend ...
+        $script:dataInventory += "`t`t`tFrontend IP:"
+        $appGateway.FrontendIPConfigurations | ForEach-Object {
+            $frontend = $_
+            $script:dataInventory += "`t`t`t`tName: $($frontend.Name)"
+            $script:dataInventory += "`t`t`t`tPublicIPAddress: $($frontend.PublicIPAddress.Id)"
+            $script:dataInventory += "`t`t`t`tPrivateIPAddress: $($frontend.PrivateIPAddress)"
+            $script:dataInventory += "`t`t`t`tPrivateIPAllocationMethod: $($frontend.PrivateIPAllocationMethod)"
+            $script:dataInventory += "`t`t`t`tSubnet: $($frontend.Subnet.Id)"
+        }
+        $script:dataInventory += "`t`t`tFrontend Port:"
+        $appGateway.FrontendPorts | ForEach-Object {
+            $port = $_
+            $script:dataInventory += "`t`t`t`tName: $($port.Name)"
+            $script:dataInventory += "`t`t`t`tPort: $($port.Port)"
+        }
+        $script:dataInventory += "`t`t`tPrivateLinks:"
+        $appGateway.PrivateLinkConfigurations | ForEach-Object {
+            $link = $_
+            $script:dataInventory += "`t`t`t`tName: $($link.Name)"
+            $script:dataInventory += "`t`t`t`t`tProvisioningState: $($link.ProvisioningState)"
+            $link.IpConfigurations | ForEach-Object {
+                $ipConfig = $_
+                $script:dataInventory += "`t`t`t`t`tIP Configuration: $($ipConfig.Name)"
+                $script:dataInventory += "`t`t`t`t`t`tPrimary: $($ipConfig.Primary)"
+                $script:dataInventory += "`t`t`t`t`t`tPrivateIPAddress: $($ipConfig.PrivateIPAddress)"
+                $script:dataInventory += "`t`t`t`t`t`tPrivateIPAllocationMethod: $($ipConfig.PrivateIPAllocationMethod)"
+                $script:dataInventory += "`t`t`t`t`t`tSubnet: $($ipConfig.Subnet.Id)"
+            }
+        }
+        $script:dataInventory += "`t`t`tPrivateEndpoints:"
+        $appGateway.PrivateEndpointConnections | ForEach-Object {
+            $endpoint = $_
+            $script:dataInventory += "`t`t`t`tName: $($endpoint.Name)"
+            $script:dataInventory += "`t`t`t`t`tProvisioningState: $($endpoint.ProvisioningState)"
+            $script:dataInventory += "`t`t`t`t`tPrivateEndpoint: $($endpoint.PrivateEndpoint.Id)"
+            $script:dataInventory += "`t`t`t`t`tSubnet: $($endpoint.PrivateEndpoint.Subnet.Name)"
+            $script:dataInventory += "`t`t`t`t`tApplicationSecurityGroups:"
+            $endpoint.PrivateEndpoint.ApplicationSecurityGroups | ForEach-Object {
+                $asg = $_
+                $script:dataInventory += "`t`t`t`t`t`t$($asg.Name)"
+            }
+        }
+        ## Listeners, Routing, Rewriting, Backend ... 
+        $script:dataInventory += "`t`t`tRequestRoutingRules:"
+        $appGateway.RequestRoutingRules | Sort-Object -Property Priority | ForEach-Object {
+            $routing = $_
+            $hostnames = @()
+            $script:dataInventory += "`t`t`t`t[Priority $($routing.Priority)] Name: $($routing.Name) ($($routing.RuleType))"
+            $script:dataInventory += "`t`t`t`t`tProvisioningState: $($routing.ProvisioningState)"
+            if ($null -ne $routing.HttpListener) {
+                $listener = $appGateway.HttpListeners | Where-Object Id -EQ $routing.HttpListener.Id
+                $script:dataInventory += "`t`t`t`t`tListener: $($listener.Name)"
+                $script:dataInventory += "`t`t`t`t`t`tProtocol: $($listener.Protocol)"
+                $script:dataInventory += "`t`t`t`t`t`tFirewallPolicy: $($listener.FirewallPolicy.Id)"
+                if ($listener.HostName) {
+                    $script:dataInventory += "`t`t`t`t`t`tHostName: $($listener.HostName)"
+                    $hostnames += "$($listener.Protocol.ToLower())://$($listener.HostName)"
+                } elseif ($listener.HostNames) {
+                    $script:dataInventory += "`t`t`t`t`t`tHostNames:"
+                    $listener.HostNames | ForEach-Object {
+                        $hosttemp = $_
+                        $script:dataInventory += "`t`t`t`t`t`t`t$($hosttemp)"
+                        $hostnames += "$($listener.Protocol.ToLower())://$($hosttemp)"
+                    }
+                }
+
+            }
+            if ($null -ne $routing.RedirectConfiguration) {
+                $redirect = $appGateway.RedirectConfigurations | Where-Object Id -EQ $routing.RedirectConfiguration.Id
+                $script:dataInventory += "`t`t`t`t`tRedirectConfiguration: $($redirect.Name)"
+                $script:dataInventory += "`t`t`t`t`t`tRedirectType: $($redirect.RedirectType)"
+                $script:dataInventory += "`t`t`t`t`t`tTargetUrl: $($redirect.TargetUrl)"
+                $script:dataInventory += "`t`t`t`t`t`tTargetUrlProtocol: $($redirect.TargetUrlProtocol)"
+            
+            }
+            if ($null -ne $routing.RewriteRuleSet) {
+                $rewrite = $appGateway.RewriteRuleSets | Where-Object Id -EQ $routing.RewriteRuleSet.Id
+                $script:dataInventory += "`t`t`t`t`tRewriteRuleSet: $($rewrite.Name)"
+                $script:dataInventory += "`t`t`t`t`t`tRules:"
+                $rewrite.RewriteRules | ForEach-Object {
+                    $rule = $_
+                    $script:dataInventory += "`t`t`t`t`t`t`tName: $($rule.Name)"
+                    $script:dataInventory += "`t`t`t`t`t`t`tActionSet:"
+                    $rule.ActionSet.RequestHeaderConfigurations | ForEach-Object {
+                        $header = $_
+                        $script:dataInventory += "`t`t`t`t`t`t`t`tRequestHeaderConfigurations: $($header.HeaderName)"
+                        $script:dataInventory += "`t`t`t`t`t`t`t`t`tHeaderValue: $($header.HeaderValue)"
+                        $script:dataInventory += "`t`t`t`t`t`t`t`t`tHeaderValueMatcher: $($header.HeaderValueMatcher.Pattern)"
+
+                    }
+                    $rule.ActionSet.ResponseHeaderConfigurations | ForEach-Object {
+                        $header = $_
+                        $script:dataInventory += "`t`t`t`t`t`t`t`tResponseHeaderConfigurations: $($header.HeaderName)"
+                        $script:dataInventory += "`t`t`t`t`t`t`t`t`tHeaderValue: $($header.HeaderValue)"
+                        $script:dataInventory += "`t`t`t`t`t`t`t`t`tHeaderValueMatcher: $($header.HeaderValueMatcher.Pattern)"
+
+                    }
+                    $script:dataInventory += "`t`t`t`t`t`t`t`tUrlConfiguration:"
+                    $script:dataInventory += "`t`t`t`t`t`t`t`t`tModifiedPath: $($rule.ActionSet.UrlConfiguration.ModifiedPath)"
+                    $script:dataInventory += "`t`t`t`t`t`t`t`t`tModifiedQueryString: $($rule.ActionSet.UrlConfiguration.ModifiedQueryString)"
+                    $script:dataInventory += "`t`t`t`t`t`t`t`t`tModifiedPath: $($rule.ActionSet.UrlConfiguration.Reroute)"
+                    $script:dataInventory += "`t`t`t`t`t`t`tConditions:"
+                    $rule.Conditions | ForEach-Object {
+                        $condition = $_
+                        $script:dataInventory += "`t`t`t`t`t`t`t`tVariable: $($condition.Variable)"
+                        $script:dataInventory += "`t`t`t`t`t`t`t`t`tPattern: $($condition.Pattern)"
+                        $script:dataInventory += "`t`t`t`t`t`t`t`t`tIgnoreCase: $($condition.IgnoreCase)"
+                        $script:dataInventory += "`t`t`t`t`t`t`t`t`tNegate: $($condition.Negate)"
+                    }
+                }
+
+            }
+            if ($null -ne $routing.UrlPathMap) {
+                $urlMap = $appGateway.UrlPathMaps | Where-Object Id -EQ $routing.UrlPathMap.Id
+                $script:dataInventory += "`t`t`t`t`tUrlPathMaps: $($urlMap.Name)"
+                $script:dataInventory += "`t`t`t`t`t`tType: $($urlMap.Type)"
+                $script:dataInventory += "`t`t`t`t`t`tRules:"
+                $urlMap.PathRules | ForEach-Object {
+                    $rule = $_
+                    $script:dataInventory += "`t`t`t`t`t`t`tName: $($rule.Name)"
+                    $script:dataInventory += "`t`t`t`t`t`t`t`tPaths:"
+                    $rule.Paths | ForEach-Object {
+                        $urlpath = $_
+                        $script:dataInventory += "`t`t`t`t`t`t`t`t`t$urlpath"
+                        $hostnames | ForEach-Object {
+                            $hosttemp = $_
+                            $script:dataUrls += [PSCustomObject]@{PublicURL="$($hosttemp)$($urlpath)"; ResourceType="Microsoft.Network/applicationGateways"; ResourceName="$($AppGatewayName)"}
+                        }
+                    }
+                    $script:dataInventory += "`t`t`t`t`t`t`t`tBackendAddressPool: $($rule.BackendAddressPool.Id)"
+                    $script:dataInventory += "`t`t`t`t`t`t`t`tBackendHttpSettings: $($rule.BackendHttpSettings.Id)"
+                    $script:dataInventory += "`t`t`t`t`t`t`t`tRedirectConfiguration: $($rule.RedirectConfiguration.Id)"
+                }
+
+            } else {
+                $hostnames | ForEach-Object {
+                    $hosttemp = $_
+                    $script:dataUrls += [PSCustomObject]@{PublicURL="$($hosttemp)/"; ResourceType="Microsoft.Network/applicationGateways"; ResourceName="$($AppGatewayName)"}
+                }
+            }
+            if ($null -ne $routing.BackendAddressPool) {
+                
+            }
+
+        }
+
+    }
+
+    end {
+        Hide-ProgressBarLevel3
+        Write-Verbose -Message "End of Get-AppGatewayDetails"
+    }
+}
+
 <#
 .SYNOPSIS
     Retrieves detailed information about a specified Azure Web App.
@@ -1452,6 +1701,11 @@ function Get-ResourceForResourceGroup {
                                 Get-FunctionAppDetails -ResourceGroupName $resItem.ResourceGroupName -FunctionAppName $resItem.Name
                             }
                         }
+                    }
+                    'Microsoft.Network/applicationGateways'
+                    {
+                        Write-Verbose -Message 'Get details for ApplicationGateway'
+                        Get-AppGatewayDetails -ResourceGroupName $resItem.ResourceGroupName -AppGatewayName $resItem.Name
                     }
                 }
     
