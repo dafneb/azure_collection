@@ -1,2 +1,2 @@
-# azure_collection
+# Azure Collection
 Usefull tools and scripts for Azure
