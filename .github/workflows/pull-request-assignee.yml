@@ -1,0 +1,26 @@
+name: Assign Pull Request Creator
+
+on:
+  pull_request:
+    types: 
+      - opened
+      - reopened
+    branches:
+      - 'main'
+      - 'stable'
+      - 'release/v*'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  assign-assignees:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Assign PR creator
+        uses: actions-ecosystem/action-add-assignees@v1
+        with:
+          assignees: ${{ github.actor }}
