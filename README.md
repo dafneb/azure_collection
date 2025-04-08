@@ -11,4 +11,4 @@ Collection contains these tools and scripts:
 - Infrastructure as code
 - Policies and initiatives
 
-Scripts at "Bash" folders are using Azure CLI.
+Scripts in the Bash folders use Azure CLI.
