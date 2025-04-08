@@ -1,8 +1,7 @@
 # Auditing / Resources
 
 Collection of scripts for auditing subscriptions, resource groups, and resources within a tenant.
-Auditing and detailing is optional feature. Basic functionality is listing everything what is inside tenant and create inventory list based on tree view.
-
+Auditing and detailing are optional features. The basic functionality involves listing all items within the tenant and creating an inventory based on a tree view.
 ## GetAllResources.ps1
 
 This script is going through all visible subscriptions and generating inventory. 
