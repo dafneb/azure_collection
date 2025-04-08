@@ -6,8 +6,7 @@ Auditing and detailing are optional features. The basic functionality involves l
 
 This script is going through all visible subscriptions and generating inventory. 
 
-Result is stored at many different files.
-
+Results are stored in several files.
 * "azure-inventory-\<tenant-id\>.txt"
   * Contains list of items viewed as tree
   * Subscription >> Resource groups >> Resource >> Interesting details
