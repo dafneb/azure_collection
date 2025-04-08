@@ -4,7 +4,7 @@ This script is going through all visible subscriptions and generating inventory.
 
 ## Description
 
-... Here should be nice description
+This script retrieves an inventory of Azure resources across all visible subscriptions in your account. It generates detailed reports, including resource hierarchies, assigned roles, public IPs, URLs, operating systems, and programming languages. The script uses your current Azure session to access and list only the resources visible to you.
 
 ## Usage
 
@@ -14,7 +14,7 @@ This script is going through all visible subscriptions and generating inventory.
 
 ## Output
 
-Result is stored at many different files.
+Results are stored in multiple files.
 
 * "azure-inventory-\<tenant-id\>.txt"
   * Contains list of items viewed as tree
