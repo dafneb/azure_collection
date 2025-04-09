@@ -10,9 +10,6 @@ on:
       - 'stable'
       - 'release/v*'
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
 jobs:
   assign-assignees:
     runs-on: ubuntu-latest
@@ -23,4 +20,5 @@ jobs:
       - name: Assign PR creator
         uses: actions-ecosystem/action-add-assignees@v1
         with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           assignees: ${{ github.actor }}

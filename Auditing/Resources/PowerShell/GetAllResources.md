@@ -6,6 +6,8 @@ This script is going through all visible subscriptions and generating inventory.
 
 This script retrieves an inventory of Azure resources across all visible subscriptions in your account. It generates detailed reports, including resource hierarchies, assigned roles, public IPs, URLs, operating systems, and programming languages. The script uses your current Azure session to access and list only the resources visible to you.
 
+Auditing and detailing are optional features. The basic functionality involves listing all items within the tenant and creating an inventory based on a tree view.
+
 ## Usage
 
 - Start powershell console
@@ -20,7 +22,7 @@ Results are stored in multiple files.
   * Contains list of items viewed as tree
   * Subscription >> Resource groups >> Resource >> Interesting details
   * It's listing only items which are visible for you, because it's using your session
- 
+
 * "azure-roles-\<tenant-id\>.csv"
   * Contains list of roles directly assigned to people, groups and managed identities
   * Roles assigned via management groups or inherited are not included, so that's why you could check what's really assigned to exact resource.
