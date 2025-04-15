@@ -19,9 +19,12 @@ param(
 
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [bool]$Details = $false
-)
+    [bool]$Details = $false,
 
+    [Parameter()]
+    [ValidateNotNullOrEmpty()]
+    [bool]$CompressArchive = $false
+)
 ###################################################################
 
 ### Progress bars functions
@@ -486,6 +489,31 @@ function Clear-DataForTenant() {
         Write-Verbose -Message "Finished clearing data for tenant ..."
     }
 }
+
+function Compress-Results() {
+
+    [CmdletBinding()]
+    param()
+
+    begin {
+        Write-Verbose -Message "Compressing results ..."
+    }
+
+    process {
+        # Compress results
+        if ($CompressArchive) {
+            $zipFile = Join-Path -Path $script:folderBase -ChildPath "$($DestinationFolder).zip"
+            if (Test-Path -Path $zipFile) {
+                Remove-Item -Path $zipFile
+            }
+            Compress-Archive -Path $script:folderDest -DestinationPath $zipFile
+        }
+    }
+
+    end {
+        Write-Verbose -Message "Finished compressing results ..."
+    }
+}
 ###################################################################
 
 ###################################################################
@@ -493,14 +521,20 @@ function Clear-DataForTenant() {
 # Get actual date and time ...
 $timeStart = Get-Date
 
+Write-Output "***********************************************************"
+Write-Output "*********** Azure Inventory Script ************************"
+Write-Output "*********** Author: David Burel (@dafneb) *****************"
+
 Test-Requirements
 Initialize-Variables
 Start-Scanning
+Compress-Results
 
 # Get actual date and time ...
 $timeEnd = Get-Date
 
 # Printout date&times ...
+Write-Output "***********************************************************"
 Write-Output "Started: $($timeStart)"
 Write-Output "Finished: $($timeEnd)"
 Write-Output "Elapsed time: $($timeEnd - $timeStart)"

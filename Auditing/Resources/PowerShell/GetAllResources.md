@@ -40,3 +40,19 @@ Results are stored in multiple files.
 
 * "azure-languages-\<tenant-id\>.csv"
   * List of used programming languages
+
+## Future development
+
+## Changelog
+
+#### Version 1.1
+
+- Rebuild structure
+- Added parameters
+- Better logging
+- Support for more tenants at one run
+- Automatic compress of destination folder if requested via parameter
+
+#### Version 1.0
+
+- First working release
