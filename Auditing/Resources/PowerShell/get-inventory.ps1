@@ -99,7 +99,8 @@ $tenants | ForEach-Object {
         $subsTags = Get-AzTag -ResourceId "/subscriptions/$subscriptionId" -ErrorAction SilentlyContinue
         $subscriptionTags = ""
         $subscriptionTagsArray = @()
-        if ($subsTags) {
+        if ($subsTags.Properties.TagsProperty.Count -gt 0) {
+            # Loop through each tag and add it to the array
             $subsTags.Properties.TagsProperty.Keys | ForEach-Object {
                 $tagName = $_
                 $tagValue = $subsTags.Properties.TagsProperty[$tagName]
@@ -110,7 +111,8 @@ $tenants | ForEach-Object {
 
         # Get management group for the subscription
         $subscriptionGroupName = ""
-        # $managementGroups = Get-AzManagementGroupEntity
+        $managementGroups = Get-AzManagementGroupEntity -ErrorAction SilentlyContinue
+        $managementGroups | Format-List
         # $managementGroups | ForEach-Object {
         #     $mg = $_
         #     $subs = Get-AzManagementGroupSubscription -GroupName $mg.Name
