@@ -20,14 +20,14 @@ Write-Verbose -Message "Checking requirements ..."
 # Check if PowerShell version is 7.4 or higher
 if ($PSVersionTable.PSVersion.Major -lt 7) {
     Write-Verbose -Message "PowerShell version is lower than 7.4, actual version is $($PSVersionTable.PSVersion) ..."
-    Write-Output -ForegroundColor Red "PowerShell version 7.4 or higher is required"
+    Write-Warning -Message "PowerShell version 7.4 or higher is required"
     exit
 }
 
 # Check if module is already installed
 if (-not (Get-Module -Name Az -ListAvailable)) {
     Write-Verbose -Message "Az module not found ..."
-    Write-Output -ForegroundColor Red "Az module not found, please install it first"
+    Write-Warning -Message "Az module not found, please install it first"
     exit
 }
 
@@ -35,6 +35,13 @@ if (-not (Get-Module -Name Az -ListAvailable)) {
 if (-not (Get-Module -Name Az)) {
     Write-Verbose -Message "Loading Az module ..."
     Import-Module Az -ErrorAction Stop
+}
+
+# Check if I am connected to Azure
+if (-not (Get-AzContext)) {
+    Write-Verbose -Message "Not connected to Azure, please connect first ..."
+    Write-Warning -Message "Not connected to Azure, please connect first"
+    exit
 }
 
 # Normalize case name to lowercase
@@ -75,26 +82,55 @@ $tenants = Get-AzTenant
 $tenants | ForEach-Object {
     $tenantId = $_.Id
     $tenantName = $_.DisplayName
+    $tenantDomains = $_.Domains
+    Write-Verbose -Message "Processing tenant: $tenantName ($tenantId)"
 
     # Get all subscriptions for the tenant
     $subscriptions = Get-AzSubscription -TenantId $tenantId
     $subscriptions | ForEach-Object {
         $subscriptionId = $_.Id
         $subscriptionName = $_.Name
+        $subscriptionState = $_.State
+        Write-Verbose -Message "Processing subscription: $subscriptionName ($subscriptionId)"
+        Set-AzContext -SubscriptionId $subscriptionId -TenantId $tenantId | Out-Null
+
+        # Get tags for the subscription
+        Write-Verbose -Message "Getting tags for subscription ..."
+        $subsTags = Get-AzTag -Scope "/subscriptions/$subscriptionId" -ErrorAction SilentlyContinue
+        $subscriptionTags = ""
+        if ($subsTags) {
+            $subscriptionTags = ConvertTo-Json -InputObject $subsTags
+        }
+
+        # Get management group for the subscription
+        Write-Verbose -Message "Getting management group for subscription ..."
+        $managementGroup = Get-AzManagementGroupSubscription -SubscriptionId $subscriptionId
+        $subscriptionGroupName = ""
+        if ($managementGroup) {
+            $subscriptionGroupName = $managementGroup.DisplayName
+        }
 
         # Get all resource groups for the subscription
+        Write-Verbose -Message "Getting resource groups for subscription ..."
         $resourceGroups = Get-AzResourceGroup -SubscriptionId $subscriptionId
         $resourceGroups | ForEach-Object {
             $resourceGroupName = $_.ResourceGroupName
+            Write-Verbose -Message "Processing resource group: $resourceGroupName"
 
             # Get all resources in the resource group
             $resources = Get-AzResource -ResourceGroupName $resourceGroupName -SubscriptionId $subscriptionId
-            foreach ($resource in $resources) {
+            $resources | ForEach-Object {
+                $resource = $_
+                Write-Verbose -Message "Processing resource: $($resource.Name) ($($resource.ResourceType))"
                 $dataInventory += [PSCustomObject]@{
                     TenantName         = $tenantName
                     TenantId           = $tenantId
+                    TenantDomains      = $tenantDomains
                     SubscriptionName   = $subscriptionName
                     SubscriptionId     = $subscriptionId
+                    SubscriptionState  = $subscriptionState
+                    SubscriptionTags   = $subscriptionTags
+                    SubscriptionGroup  = $subscriptionGroupName
                     ResourceGroupName  = $resourceGroupName
                     ResourceType       = $resource.ResourceType
                     ResourceName       = $resource.Name
