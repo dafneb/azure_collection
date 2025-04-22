@@ -99,11 +99,25 @@ $tenants | ForEach-Object {
         $subsTags = Get-AzTag -ResourceId "/subscriptions/$subscriptionId" -ErrorAction SilentlyContinue
         $subscriptionTags = ""
         if ($subsTags) {
-            $subscriptionTags = $subsTags.Properties.TagsProperty | Out-String
+            $subscriptionTags = $subsTags.Properties.TagsProperty | ForEach-Object {
+                $tagName = $_.Name
+                $tagValue = $_.Value
+                "$tagName=$tagValue"
+            } -join "; "
         }
 
         # Get management group for the subscription
         $subscriptionGroupName = ""
+        $managementGroups = Get-AzManagementGroup
+        $managementGroups | ForEach-Object {
+            $mg = $_
+            $subs = Get-AzManagementGroupSubscription -GroupName $mg.Name
+            $subs | ForEach-Object {
+                if ($_.Id -contains "/subscriptions/$($subscriptionId)") {
+                    $subscriptionGroupName = (Get-AzManagementGroup -GroupId $_.ParentId).DisplayName
+                }
+            }
+        }
 
         # Get all resource groups for the subscription
         Write-Verbose -Message "Getting resource groups for subscription ..."
