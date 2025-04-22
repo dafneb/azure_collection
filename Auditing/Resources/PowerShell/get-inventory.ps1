@@ -110,19 +110,19 @@ $tenants | ForEach-Object {
 
         # Get management group for the subscription
         $subscriptionGroupName = ""
-        $managementGroups = Get-AzManagementGroupEntity
-        $managementGroups | ForEach-Object {
-            $mg = $_
-            $subs = Get-AzManagementGroupSubscription -GroupName $mg.Name
-            $subs | ForEach-Object {
-                if ($_.Name -eq "$($subscriptionId)") {
-                    $subscriptionGroupName = $mg.DisplayName
-                }
-            }
-            if ($subscriptionGroupName) {
-                break
-            }
-        }
+        # $managementGroups = Get-AzManagementGroupEntity
+        # $managementGroups | ForEach-Object {
+        #     $mg = $_
+        #     $subs = Get-AzManagementGroupSubscription -GroupName $mg.Name
+        #     $subs | ForEach-Object {
+        #         if ($_.Name -eq "$($subscriptionId)") {
+        #             $subscriptionGroupName = $mg.DisplayName
+        #         }
+        #     }
+        #     if ($subscriptionGroupName) {
+        #         break
+        #     }
+        # }
 
         # Get all resource groups for the subscription
         Write-Verbose -Message "Getting resource groups for subscription ..."
