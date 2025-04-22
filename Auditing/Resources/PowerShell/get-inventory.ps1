@@ -103,22 +103,18 @@ $tenants | ForEach-Object {
         }
 
         # Get management group for the subscription
-        Write-Verbose -Message "Getting management group for subscription ..."
-        $managementGroup = Get-AzManagementGroupSubscription -GroupName * -SubscriptionId $subscriptionId
         $subscriptionGroupName = ""
-        if ($managementGroup) {
-            $subscriptionGroupName = $managementGroup.DisplayName
-        }
 
         # Get all resource groups for the subscription
         Write-Verbose -Message "Getting resource groups for subscription ..."
-        $resourceGroups = Get-AzResourceGroup -SubscriptionId $subscriptionId
+        $resourceGroups = Get-AzResourceGroup
         $resourceGroups | ForEach-Object {
             $resourceGroupName = $_.ResourceGroupName
+            $resourceGroupId = $_.ResourceId
             Write-Verbose -Message "Processing resource group: $resourceGroupName"
 
             # Get all resources in the resource group
-            $resources = Get-AzResource -ResourceGroupName $resourceGroupName -SubscriptionId $subscriptionId
+            $resources = Get-AzResource -ResourceGroupName $resourceGroupName
             $resources | ForEach-Object {
                 $resource = $_
                 Write-Verbose -Message "Processing resource: $($resource.Name) ($($resource.ResourceType))"
@@ -132,8 +128,11 @@ $tenants | ForEach-Object {
                     SubscriptionTags   = $subscriptionTags
                     SubscriptionGroup  = $subscriptionGroupName
                     ResourceGroupName  = $resourceGroupName
-                    ResourceType       = $resource.ResourceType
+                    ResourceGroupId    = $resourceGroupId
+                    ResourceGroupTags  = ""
                     ResourceName       = $resource.Name
+                    ResourceId         = $resource.ResourceId
+                    ResourceType       = $resource.ResourceType
                     ResourceLocation   = $resource.Location
                 }
             }
