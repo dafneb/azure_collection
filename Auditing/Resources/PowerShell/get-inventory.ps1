@@ -99,7 +99,7 @@ $tenants | ForEach-Object {
         $subsTags = Get-AzTag -ResourceId "/subscriptions/$subscriptionId" -ErrorAction SilentlyContinue
         $subscriptionTags = ""
         if ($subsTags) {
-            $subscriptionTags = ConvertTo-Json -InputObject $subsTags.Tags
+            $subscriptionTags = $subsTags.Properties.TagsProperty | Out-String
         }
 
         # Get management group for the subscription
@@ -107,14 +107,14 @@ $tenants | ForEach-Object {
 
         # Get all resource groups for the subscription
         Write-Verbose -Message "Getting resource groups for subscription ..."
-        $resourceGroups = Get-AzResourceGroup
+        $resourceGroups = Get-AzResourceGroup -ApiVersion "2024-11-01"
         $resourceGroups | ForEach-Object {
             $resourceGroupName = $_.ResourceGroupName
             $resourceGroupId = $_.ResourceId
             Write-Verbose -Message "Processing resource group: $resourceGroupName"
 
             # Get all resources in the resource group
-            $resources = Get-AzResource -ResourceGroupName $resourceGroupName
+            $resources = Get-AzResource -ResourceGroupName $resourceGroupName -ApiVersion "2024-11-01"
             $resources | ForEach-Object {
                 $resource = $_
                 Write-Verbose -Message "Processing resource: $($resource.Name) ($($resource.ResourceType))"
