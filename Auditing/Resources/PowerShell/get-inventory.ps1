@@ -81,8 +81,8 @@ $dataInventory = @()
 $tenants = Get-AzTenant
 $tenants | ForEach-Object {
     $tenantId = $_.Id
-    $tenantName = $_.DisplayName
-    $tenantDomains = $_.Domains
+    $tenantName = $_.Name
+    $tenantDomains = $_.Domains -join ","
     Write-Verbose -Message "Processing tenant: $tenantName ($tenantId)"
 
     # Get all subscriptions for the tenant
@@ -99,7 +99,7 @@ $tenants | ForEach-Object {
         $subsTags = Get-AzTag -ResourceId "/subscriptions/$subscriptionId" -ErrorAction SilentlyContinue
         $subscriptionTags = ""
         if ($subsTags) {
-            $subscriptionTags = ConvertTo-Json -InputObject $subsTags
+            $subscriptionTags = ConvertTo-Json -InputObject $subsTags.Tags
         }
 
         # Get management group for the subscription
