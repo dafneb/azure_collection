@@ -98,24 +98,29 @@ $tenants | ForEach-Object {
         Write-Verbose -Message "Getting tags for subscription ..."
         $subsTags = Get-AzTag -ResourceId "/subscriptions/$subscriptionId" -ErrorAction SilentlyContinue
         $subscriptionTags = ""
+        $subscriptionTagsArray = @()
         if ($subsTags) {
-            $subscriptionTags = $subsTags.Properties.TagsProperty | ForEach-Object {
-                $tagName = $_.Name
-                $tagValue = $_.Value
-                "$tagName=$tagValue"
-            } -join "; "
+            $subsTags.Properties.TagsProperty.Keys | ForEach-Object {
+                $tagName = $_
+                $tagValue = $subsTags.Properties.TagsProperty[$tagName]
+                $subscriptionTagsArray += "[$tagName = $tagValue]"
+            }
+            $subscriptionTags = $subscriptionTagsArray -join "; "
         }
 
         # Get management group for the subscription
         $subscriptionGroupName = ""
-        $managementGroups = Get-AzManagementGroup
+        $managementGroups = Get-AzManagementGroupEntity
         $managementGroups | ForEach-Object {
             $mg = $_
             $subs = Get-AzManagementGroupSubscription -GroupName $mg.Name
             $subs | ForEach-Object {
-                if ($_.Id -contains "/subscriptions/$($subscriptionId)") {
-                    $subscriptionGroupName = (Get-AzManagementGroup -GroupId $_.ParentId).DisplayName
+                if ($_.Name -eq "$($subscriptionId)") {
+                    $subscriptionGroupName = $mg.DisplayName
                 }
+            }
+            if ($subscriptionGroupName) {
+                break
             }
         }
 
