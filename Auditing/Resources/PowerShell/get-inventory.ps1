@@ -42,9 +42,10 @@ $caseFolderName = $CaseName.ToLower()
 $caseFolderName = $caseFolderName.Trim()
 $caseFolderName = $caseFolderName -replace '[\\/:*?"<>|]', '_'
 
-# Paths for logs (1/2)
+# Paths for logs
 $baseFolderPath = Join-Path -Path (Get-Location) -ChildPath "case"
 $caseFolderPath = Join-Path -Path $baseFolderPath -ChildPath "$($caseFolderName)"
+$inveFilePath = Join-Path -Path $caseFolderPath -ChildPath "inventory.csv"
 
 Write-Verbose -Message "Checking folders (1/2) ..."
 
@@ -60,11 +61,52 @@ if (-not (Test-Path -Path $caseFolderPath)) {
     New-Item -ItemType Directory -Path $caseFolderPath | Out-Null
 }
 
+# Check if the inventory file already exists
+if (Test-Path -Path $inveFilePath) {
+    Write-Verbose -Message "Inventory file already exists, deleting it ..."
+    Remove-Item -Path $inveFilePath -Force
+}
 
+Write-Verbose -Message "Listing inventory from Azure ..."
 
+$dataInventory = @()
 
+$tenants = Get-AzTenant
+$tenants | ForEach-Object {
+    $tenantId = $_.Id
+    $tenantName = $_.DisplayName
 
+    # Get all subscriptions for the tenant
+    $subscriptions = Get-AzSubscription -TenantId $tenantId
+    $subscriptions | ForEach-Object {
+        $subscriptionId = $_.Id
+        $subscriptionName = $_.Name
 
+        # Get all resource groups for the subscription
+        $resourceGroups = Get-AzResourceGroup -SubscriptionId $subscriptionId
+        $resourceGroups | ForEach-Object {
+            $resourceGroupName = $_.ResourceGroupName
+
+            # Get all resources in the resource group
+            $resources = Get-AzResource -ResourceGroupName $resourceGroupName -SubscriptionId $subscriptionId
+            foreach ($resource in $resources) {
+                $dataInventory += [PSCustomObject]@{
+                    TenantName         = $tenantName
+                    TenantId           = $tenantId
+                    SubscriptionName   = $subscriptionName
+                    SubscriptionId     = $subscriptionId
+                    ResourceGroupName  = $resourceGroupName
+                    ResourceType       = $resource.ResourceType
+                    ResourceName       = $resource.Name
+                    ResourceLocation   = $resource.Location
+                }
+            }
+        }
+    }
+}
+
+Write-Verbose -Message "Exporting inventory to CSV file ..."
+$dataInventory | Export-Csv -Path $inveFilePath -NoTypeInformation -Force -Encoding UTF8
 
 # Get actual date and time ...
 $timeEnd = Get-Date

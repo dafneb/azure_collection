@@ -6,9 +6,5 @@ Useful tools and scripts for Azure
 
 Collection contains these tools and scripts:
 
-- Auditing, checking and inventory
-- Common
-- Infrastructure as code
-- Policies and initiatives
-
-Scripts in the Bash folders use Azure CLI.
+- Auditing, checking and inventorying Azure resources
+- Auditing, checking and inventorying Entra ID
