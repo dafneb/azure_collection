@@ -112,6 +112,7 @@ $tenants | ForEach-Object {
         # Get management group for the subscription
         $subscriptionGroupName = ""
         $managementGroups = Get-AzManagementGroupEntity -ErrorAction SilentlyContinue
+        Write-Host -Message "Processing subscription: $subscriptionName ($subscriptionId)"
         $managementGroups | Format-List
         # $managementGroups | ForEach-Object {
         #     $mg = $_
