@@ -96,7 +96,7 @@ $tenants | ForEach-Object {
 
         # Get tags for the subscription
         Write-Verbose -Message "Getting tags for subscription ..."
-        $subsTags = Get-AzTag -Scope "/subscriptions/$subscriptionId" -ErrorAction SilentlyContinue
+        $subsTags = Get-AzTag -ResourceId "/subscriptions/$subscriptionId" -ErrorAction SilentlyContinue
         $subscriptionTags = ""
         if ($subsTags) {
             $subscriptionTags = ConvertTo-Json -InputObject $subsTags
@@ -104,7 +104,7 @@ $tenants | ForEach-Object {
 
         # Get management group for the subscription
         Write-Verbose -Message "Getting management group for subscription ..."
-        $managementGroup = Get-AzManagementGroupSubscription -SubscriptionId $subscriptionId
+        $managementGroup = Get-AzManagementGroupSubscription -GroupName * -SubscriptionId $subscriptionId
         $subscriptionGroupName = ""
         if ($managementGroup) {
             $subscriptionGroupName = $managementGroup.DisplayName
