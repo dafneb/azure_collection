@@ -1,4 +1,31 @@
+<#
 
+.SYNOPSIS
+    This script lists all resources in Azure and exports the inventory to a CSV file.
+
+.DESCRIPTION
+    This script lists all resources in Azure and exports the inventory to a CSV file.
+    It checks if the Az module is installed and loaded, and if the user is connected to Azure.
+    It creates a case folder for the inventory and exports the data to a CSV file.
+
+.PARAMETER CaseName
+    The name of the case folder where the inventory will be saved.
+    The default value is "case-name".
+    The case name will be normalized to lowercase and invalid characters will be replaced with underscores.
+
+.EXAMPLE
+    ./get-inventory.ps1 -CaseName "MyCase"
+    This will create a folder named "mycase" in the current directory and save the inventory to "mycase/inventory.csv".
+
+.NOTES
+    This script requires PowerShell 7.4 or higher.
+    Ensure that the Microsoft Az PowerShell module is installed before running the script.
+    The script requires appropriate permissions to access resource data in Azure.
+
+    Author: David Burel (@dafneb)
+    Date: April 25, 2025
+    Version: 1.0.0
+#>
 
 # Define the script's parameters
 [CmdletBinding(DefaultParameterSetName = "Default")]
@@ -26,7 +53,6 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
 
 # Check if module is already installed
 if (-not (Get-Module -Name Az -ListAvailable)) {
-    Write-Verbose -Message "Az module not found ..."
     Write-Warning -Message "Az module not found, please install it first"
     exit
 }
@@ -39,7 +65,6 @@ if (-not (Get-Module -Name Az)) {
 
 # Check if I am connected to Azure
 if (-not (Get-AzContext)) {
-    Write-Verbose -Message "Not connected to Azure, please connect first ..."
     Write-Warning -Message "Not connected to Azure, please connect first"
     exit
 }
@@ -111,12 +136,11 @@ $tenants | ForEach-Object {
 
         # Get management group for the subscription
         $subscriptionGroupName = ""
-        $managementGroups = Get-AzManagementGroupEntity -ErrorAction SilentlyContinue
-        Write-Host -Message "Processing subscription: $subscriptionName ($subscriptionId)"
-        $managementGroups | Format-List
+        # $managementGroups = Get-AzManagementGroupEntity -ErrorAction SilentlyContinue
+        # Write-Host -Message "Processing subscription: $subscriptionName ($subscriptionId)"
         # $managementGroups | ForEach-Object {
         #     $mg = $_
-        #     $subs = Get-AzManagementGroupSubscription -GroupName $mg.Name
+        #     $subs = Get-AzManagementGroupSubscription -GroupName $mg.Name -ErrorAction SilentlyContinue
         #     $subs | ForEach-Object {
         #         if ($_.Name -eq "$($subscriptionId)") {
         #             $subscriptionGroupName = $mg.DisplayName
@@ -129,14 +153,14 @@ $tenants | ForEach-Object {
 
         # Get all resource groups for the subscription
         Write-Verbose -Message "Getting resource groups for subscription ..."
-        $resourceGroups = Get-AzResourceGroup -ApiVersion "2024-11-01"
+        $resourceGroups = Get-AzResourceGroup -ApiVersion "2024-11-01" -ErrorAction SilentlyContinue
         $resourceGroups | ForEach-Object {
             $resourceGroupName = $_.ResourceGroupName
             $resourceGroupId = $_.ResourceId
             Write-Verbose -Message "Processing resource group: $resourceGroupName"
 
             # Get all resources in the resource group
-            $resources = Get-AzResource -ResourceGroupName $resourceGroupName -ApiVersion "2024-11-01"
+            $resources = Get-AzResource -ResourceGroupName $resourceGroupName -ApiVersion "2024-11-01" -ErrorAction SilentlyContinue
             $resources | ForEach-Object {
                 $resource = $_
                 Write-Verbose -Message "Processing resource: $($resource.Name) ($($resource.ResourceType))"
@@ -156,6 +180,9 @@ $tenants | ForEach-Object {
                     ResourceId         = $resource.ResourceId
                     ResourceType       = $resource.ResourceType
                     ResourceLocation   = $resource.Location
+                    ResourceSku        = $resource.Sku
+                    ResourceKind       = $resource.Kind
+                    ResourceTags       = ""
                 }
             }
         }
