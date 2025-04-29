@@ -25,7 +25,7 @@
     The script requires appropriate permissions to access resource data in Azure.
 
     Author: David Burel (@dafneb)
-    Date: April 25, 2025
+    Date: April 29, 2025
     Version: 1.0.0
 #>
 

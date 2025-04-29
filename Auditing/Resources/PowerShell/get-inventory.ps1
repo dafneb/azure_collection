@@ -13,6 +13,9 @@
     The default value is "case-name".
     The case name will be normalized to lowercase and invalid characters will be replaced with underscores.
 
+.PARAMETER Append
+    If specified, the script will append the inventory to an existing CSV file instead of creating a new one.
+
 .EXAMPLE
     ./get-inventory.ps1 -CaseName "MyCase"
     This will create a folder named "mycase" in the current directory and save the inventory to "mycase/inventory.csv".
@@ -23,16 +26,20 @@
     The script requires appropriate permissions to access resource data in Azure.
 
     Author: David Burel (@dafneb)
-    Date: April 25, 2025
-    Version: 1.0.0
+    Date: April 29, 2025
+    Version: 1.0.1
 #>
 
 # Define the script's parameters
 [CmdletBinding(DefaultParameterSetName = "Default")]
 param (
     [Parameter(Mandatory = $true, ParameterSetName = "Default")]
+    [Parameter(Mandatory = $true, ParameterSetName = "Append")]
     [ValidateNotNullOrEmpty()]
-    [string]$CaseName
+    [string]$CaseName,
+
+    [Parameter(Mandatory = $true, ParameterSetName = "Append")]
+    [switch]$Append
 )
 
 $timeStart = Get-Date
@@ -95,8 +102,12 @@ if (-not (Test-Path -Path $caseFolderPath)) {
 
 # Check if the inventory file already exists
 if (Test-Path -Path $inveFilePath) {
-    Write-Verbose -Message "Inventory file already exists, deleting it ..."
-    Remove-Item -Path $inveFilePath -Force
+    if (-not $Append) {
+        Write-Verbose -Message "Inventory file already exists, deleting it ..."
+        Remove-Item -Path $inveFilePath -Force
+    } else {
+        Write-Verbose -Message "Appending to existing inventory file ..."
+    }
 }
 
 Write-Verbose -Message "Listing inventory from Azure ..."
@@ -104,6 +115,9 @@ Write-Verbose -Message "Listing inventory from Azure ..."
 $dataInventory = @()
 
 $tenants = Get-AzTenant
+if (-not $tenants) {
+    Write-Warning -Message "No tenants found, please check your connection"
+}
 $tenants | ForEach-Object {
     $tenantId = $_.Id
     $tenantName = $_.Name
@@ -112,12 +126,19 @@ $tenants | ForEach-Object {
 
     # Get all subscriptions for the tenant
     $subscriptions = Get-AzSubscription -TenantId $tenantId
+    if (-not $subscriptions) {
+        Write-Warning -Message "No subscriptions found for tenant $tenantName ($tenantId)"
+    }
     $subscriptions | ForEach-Object {
         $subscriptionId = $_.Id
         $subscriptionName = $_.Name
         $subscriptionState = $_.State
         Write-Verbose -Message "Processing subscription: $subscriptionName ($subscriptionId)"
         Set-AzContext -SubscriptionId $subscriptionId -TenantId $tenantId | Out-Null
+        if (-not (Get-AzContext)) {
+            Write-Warning -Message "Failed to set context for subscription $subscriptionName ($subscriptionId)"
+            continue
+        }
 
         # Get tags for the subscription
         Write-Verbose -Message "Getting tags for subscription ..."
@@ -136,6 +157,7 @@ $tenants | ForEach-Object {
 
         # Get management group for the subscription
         $subscriptionGroupName = ""
+        # TODO: Uncomment and implement the management group retrieval logic if needed
         # $managementGroups = Get-AzManagementGroupEntity -ErrorAction SilentlyContinue
         # Write-Host -Message "Processing subscription: $subscriptionName ($subscriptionId)"
         # $managementGroups | ForEach-Object {
@@ -154,6 +176,28 @@ $tenants | ForEach-Object {
         # Get all resource groups for the subscription
         Write-Verbose -Message "Getting resource groups for subscription ..."
         $resourceGroups = Get-AzResourceGroup -ApiVersion "2024-11-01" -ErrorAction SilentlyContinue
+        if (-not $resourceGroups) {
+            $dataInventory += [PSCustomObject]@{
+                TenantName         = $tenantName
+                TenantId           = $tenantId
+                TenantDomains      = $tenantDomains
+                SubscriptionName   = $subscriptionName
+                SubscriptionId     = $subscriptionId
+                SubscriptionState  = $subscriptionState
+                SubscriptionTags   = $subscriptionTags
+                SubscriptionGroup  = $subscriptionGroupName
+                ResourceGroupName  = ""
+                ResourceGroupId    = ""
+                ResourceGroupTags  = ""
+                ResourceName       = ""
+                ResourceId         = ""
+                ResourceType       = ""
+                ResourceLocation   = ""
+                ResourceSku        = ""
+                ResourceKind       = ""
+                ResourceTags       = ""
+            }
+        }
         $resourceGroups | ForEach-Object {
             $resourceGroupName = $_.ResourceGroupName
             $resourceGroupId = $_.ResourceId
@@ -161,6 +205,28 @@ $tenants | ForEach-Object {
 
             # Get all resources in the resource group
             $resources = Get-AzResource -ResourceGroupName $resourceGroupName -ApiVersion "2024-11-01" -ErrorAction SilentlyContinue
+            if (-not $resources) {
+                $dataInventory += [PSCustomObject]@{
+                    TenantName         = $tenantName
+                    TenantId           = $tenantId
+                    TenantDomains      = $tenantDomains
+                    SubscriptionName   = $subscriptionName
+                    SubscriptionId     = $subscriptionId
+                    SubscriptionState  = $subscriptionState
+                    SubscriptionTags   = $subscriptionTags
+                    SubscriptionGroup  = $subscriptionGroupName
+                    ResourceGroupName  = $resourceGroupName
+                    ResourceGroupId    = $resourceGroupId
+                    ResourceGroupTags  = ""
+                    ResourceName       = ""
+                    ResourceId         = ""
+                    ResourceType       = ""
+                    ResourceLocation   = ""
+                    ResourceSku        = ""
+                    ResourceKind       = ""
+                    ResourceTags       = ""
+                }
+            }
             $resources | ForEach-Object {
                 $resource = $_
                 Write-Verbose -Message "Processing resource: $($resource.Name) ($($resource.ResourceType))"
@@ -190,7 +256,13 @@ $tenants | ForEach-Object {
 }
 
 Write-Verbose -Message "Exporting inventory to CSV file ..."
-$dataInventory | Export-Csv -Path $inveFilePath -NoTypeInformation -Force -Encoding UTF8
+if ($Append) {
+    Write-Verbose -Message "Appending to existing file ..."
+    $dataInventory | Export-Csv -Path $inveFilePath -NoTypeInformation -Force -Encoding UTF8 -Append
+} else {
+    Write-Verbose -Message "Creating new file ..."
+    $dataInventory | Export-Csv -Path $inveFilePath -NoTypeInformation -Force -Encoding UTF8
+}
 
 # Get actual date and time ...
 $timeEnd = Get-Date
