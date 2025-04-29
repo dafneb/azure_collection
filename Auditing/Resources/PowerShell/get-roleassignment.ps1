@@ -6,8 +6,12 @@
 [CmdletBinding(DefaultParameterSetName = "Default")]
 param (
     [Parameter(Mandatory = $true, ParameterSetName = "Default")]
+    [Parameter(Mandatory = $true, ParameterSetName = "Append")]
     [ValidateNotNullOrEmpty()]
-    [string]$CaseName
+    [string]$CaseName,
+
+    [Parameter(Mandatory = $true, ParameterSetName = "Append")]
+    [switch]$Append
 )
 
 $timeStart = Get-Date
@@ -70,8 +74,12 @@ if (-not (Test-Path -Path $caseFolderPath)) {
 
 # Check if the inventory file already exists
 if (Test-Path -Path $roleFilePath) {
-    Write-Verbose -Message "Inventory file already exists, deleting it ..."
-    Remove-Item -Path $roleFilePath -Force
+    if (-not $Append) {
+        Write-Verbose -Message "Inventory file already exists, deleting it ..."
+        Remove-Item -Path $roleFilePath -Force
+    } else {
+        Write-Verbose -Message "Appending to existing file ..."
+    }
 }
 Write-Verbose -Message "Listing roles from Azure ..."
 
@@ -114,7 +122,13 @@ $tenants | ForEach-Object {
 }
 
 Write-Verbose -Message "Exporting roles to CSV file ..."
-$dataRoles | Export-Csv -Path $roleFilePath -NoTypeInformation -Force -Encoding UTF8
+if ($Append) {
+    Write-Verbose -Message "Appending to existing file ..."
+    $dataRoles | Export-Csv -Path $roleFilePath -NoTypeInformation -Force -Encoding UTF8 -Append
+} else {
+    Write-Verbose -Message "Creating new file ..."
+    $dataRoles | Export-Csv -Path $roleFilePath -NoTypeInformation -Force -Encoding UTF8
+}
 
 # Get actual date and time ...
 $timeEnd = Get-Date
