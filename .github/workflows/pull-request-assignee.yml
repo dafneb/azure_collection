@@ -13,6 +13,6 @@ on:
 jobs:
   assign-assignees:
     uses: dafneb/.github/.github/workflows/pull-request-assignee.yml@main
-      with:
-        assignees: ${{ github.actor }}
-      secrets: inherit
+    with:
+      assignees: ${{ github.actor }}
+    secrets: inherit
