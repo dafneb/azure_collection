@@ -85,21 +85,35 @@ Write-Verbose -Message "Listing roles from Azure ..."
 
 $dataRoles = @()
 
-$tenants = Get-AzTenant
+$tenants = Get-AzTenant -ErrorAction SilentlyContinue
+if (-not $tenants) {
+    Write-Warning -Message "No tenants found, please check your connection"
+}
 $tenants | ForEach-Object {
     $tenantId = $_.Id
     $tenantName = $_.Name
     Write-Verbose -Message "Processing tenant: $tenantName ($tenantId)"
 
     # Get all subscriptions for the tenant
-    $subscriptions = Get-AzSubscription -TenantId $tenantId
+    $subscriptions = Get-AzSubscription -TenantId $tenantId -ErrorAction SilentlyContinue
+    if (-not $subscriptions) {
+        Write-Warning -Message "No subscriptions found for tenant $tenantName ($tenantId)"
+    }
     $subscriptions | ForEach-Object {
         $subscriptionId = $_.Id
         $subscriptionName = $_.Name
         Write-Verbose -Message "Processing subscription: $subscriptionName ($subscriptionId)"
+        Set-AzContext -SubscriptionId $subscriptionId -TenantId $tenantId -ErrorAction SilentlyContinue | Out-Null
+        if (-not (Get-AzContext)) {
+            Write-Warning -Message "Failed to set context for subscription $subscriptionName ($subscriptionId)"
+            continue
+        }
 
         # Get all role assignments for the subscription
-        $roleAssignments = Get-AzRoleAssignment -Scope "/subscriptions/$($subscriptionId)"
+        $roleAssignments = Get-AzRoleAssignment -Scope "/subscriptions/$($subscriptionId)" -ErrorAction SilentlyContinue
+        if (-not $roleAssignments) {
+            Write-Warning -Message "No role assignments found for subscription $subscriptionName ($subscriptionId)"
+        }
 
         # Process each role assignment
         $roleAssignments | ForEach-Object {
