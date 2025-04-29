@@ -10,9 +10,6 @@ on:
       - 'stable'
       - 'release/v*'
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
 jobs:
   assign-assignees:
     runs-on: ubuntu-latest
@@ -21,6 +18,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Assign PR creator
-        uses: actions-ecosystem/action-add-assignees@v1
+        uses: dafneb/.github/.github/workflows/pull-request-assignee.yml@main
         with:
           assignees: ${{ github.actor }}
+        secrets: inherit
