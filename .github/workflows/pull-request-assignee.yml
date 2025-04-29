@@ -12,6 +12,9 @@ on:
 
 jobs:
   assign-assignees:
+    permissions:
+      issues: write
+      pull-requests: write  
     uses: dafneb/.github/.github/workflows/pull-request-assignee.yml@main
     with:
       assignees: ${{ github.actor }}
