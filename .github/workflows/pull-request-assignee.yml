@@ -12,13 +12,7 @@ on:
 
 jobs:
   assign-assignees:
-    runs-on: ubuntu-latest
-    permissions:
-      issues: write
-      pull-requests: write
-    steps:
-      - name: Assign PR creator
-        uses: dafneb/.github/.github/workflows/pull-request-assignee.yml@main
-        with:
-          assignees: ${{ github.actor }}
-        secrets: inherit
+    uses: dafneb/.github/.github/workflows/pull-request-assignee.yml@main
+      with:
+        assignees: ${{ github.actor }}
+      secrets: inherit
