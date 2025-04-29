@@ -32,7 +32,7 @@
 param (
     [Parameter(Mandatory = $true, ParameterSetName = "Default")]
     [ValidateNotNullOrEmpty()]
-    [string]$CaseName = "case-name"
+    [string]$CaseName
 )
 
 $timeStart = Get-Date
