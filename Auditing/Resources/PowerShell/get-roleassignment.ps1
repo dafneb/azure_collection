@@ -1,6 +1,33 @@
 <#
-#>
+.SYNOPSIS
+    This script lists all role assignments in Azure and exports the data to a CSV file.
 
+.DESCRIPTION
+    This script lists all role assignments in Azure and exports the data to a CSV file.
+    It checks if the Az module is installed and loaded, and if the user is connected to Azure.
+    It creates a case folder for the role assignments and exports the data to a CSV file.
+
+.PARAMETER CaseName
+    The name of the case folder where the inventory will be saved.
+    The default value is "case-name".
+    The case name will be normalized to lowercase and invalid characters will be replaced with underscores.
+
+.PARAMETER Append
+    If specified, the script will append the role assignments to an existing CSV file instead of creating a new one.
+
+.EXAMPLE
+    ./get-roleassignment.ps1 -CaseName "MyCase"
+    This will create a folder named "mycase" in the current directory and save the role assignments to "case/mycase/roleassignment.csv".
+
+.NOTES
+    This script requires PowerShell 7.4 or higher.
+    Ensure that the Microsoft Az PowerShell module is installed before running the script.
+    The script requires appropriate permissions to access resource data in Azure.
+
+    Author: David Burel (@dafneb)
+    Date: April 25, 2025
+    Version: 1.0.0
+#>
 
 # Define the script's parameters
 [CmdletBinding(DefaultParameterSetName = "Default")]
