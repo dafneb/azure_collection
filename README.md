@@ -11,3 +11,12 @@ Collection contains these tools and scripts:
 
 - Auditing, checking and inventorying Azure resources
 - Auditing, checking and inventorying Entra ID
+  - Users
+    - Active / In-active
+    - Member / Guest
+    - Custom attributes
+    - Licenses
+    - Permissions and roles
+  - Groups
+    - Membership
+    - Ownership

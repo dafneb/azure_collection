@@ -23,3 +23,9 @@ $TenantId = 'yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyy'
 $ApplicationId = 'zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzz'
 $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $ApplicationId, $SecurePassword
 Connect-AzAccount -ServicePrincipal -TenantId $TenantId -Credential $Credential
+
+#----------------------------------------------------------------
+
+# Login to with Microsoft Graph ...
+$TenantId = 'yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyy'
+Connect-MgGraph -TenantId $TenantId -Scopes 'User.Read.All', 'Group.Read.All', 'Directory.Read.All', 'AuditLog.Read.All'

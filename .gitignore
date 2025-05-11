@@ -1,5 +1,27 @@
+# Visual Studio Code
+.vscode/
+
+# Local History for Visual Studio Code
+.history/
+
+# Visual Studio Code - Server - Remote Development
+.remote/
+
+# My notes 
 notes.txt
-.vscode
-/.trash
-/tests
-/inventory
+
+# Snyk Security
+.dcignore
+
+# REST Client
+*.http
+*.rest
+
+# Backup files
+*.bck
+
+# Local trash folder
+.trash/
+
+# Case folder
+case/
