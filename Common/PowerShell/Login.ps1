@@ -29,3 +29,6 @@ Connect-AzAccount -ServicePrincipal -TenantId $TenantId -Credential $Credential
 # Login to with Microsoft Graph ...
 $TenantId = 'yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyy'
 Connect-MgGraph -TenantId $TenantId -Scopes 'User.Read.All', 'Group.Read.All', 'Directory.Read.All', 'AuditLog.Read.All'
+
+$TenantId = 'yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyy'
+Connect-MgGraph -TenantId $TenantId -Scopes 'User.Read.All', 'Group.Read.All', 'Directory.Read.All', 'AuditLog.Read.All' -UseDeviceAuthentication
