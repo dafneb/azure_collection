@@ -198,7 +198,7 @@ $dataGroups = @()
 $dataLicenses = @()
 
 # Get the list of all users in the organization
-$users = Get-MgUser -All
+$users = Get-MgUser -All -Property "id,displayName,userPrincipalName,userType,customSecurityAttributes,SignInActivity,createdDateTime" | Select-Object -Property id,displayName,userPrincipalName,userType,customSecurityAttributes,SignInActivity,createdDateTime
 # Loop through each user and retrieve their custom security attributes
 $users | ForEach-Object {
     $user = $_
@@ -209,7 +209,7 @@ $users | ForEach-Object {
         $dataDetails += "ID: $($user.ID); DisplayName: $($user.DisplayName); UserPrincipalName: $($user.UserPrincipalName); UserType: $($user.UserType)"
         # Basic user information
         $dataUsers += [PSCustomObject]@{
-            ID = $user.ID
+            UserID = $user.ID
             DisplayName = $user.DisplayName
             UserPrincipalName = $user.UserPrincipalName
             UserType = $user.UserType
@@ -219,7 +219,7 @@ $users | ForEach-Object {
         $userMemberOf | ForEach-Object {
             $group = $_
             $dataGroups += [PSCustomObject]@{
-                ID = $group.ID
+                GroupID = $group.ID
                 DisplayName = $group.AdditionalProperties["displayName"]
                 Description = $group.AdditionalProperties["description"]
                 Mail = $group.AdditionalProperties["mail"]
@@ -241,7 +241,7 @@ $users | ForEach-Object {
         $licenses | ForEach-Object {
             $license = $_
             $dataLicenses += [PSCustomObject]@{
-                ID = $user.ID
+                UserID = $user.ID
                 DisplayName = $user.DisplayName
                 UserPrincipalName = $user.UserPrincipalName
                 SkuId = $license.SkuId
@@ -252,12 +252,11 @@ $users | ForEach-Object {
         }
 
         # Retrieve the custom security attributes for the user
-        $customAttributes = Get-MgUser -UserId $user.Id -Property "customSecurityAttributes"
-        if ($customAttributes.CustomSecurityAttributes.AdditionalProperties.Count -gt 0) {
+        if ($user.CustomSecurityAttributes.AdditionalProperties.Count -gt 0) {
             $dataDetails += "`tCustom Security Attributes:"
-            $customAttributes.CustomSecurityAttributes.AdditionalProperties.Keys | ForEach-Object {
+            $user.CustomSecurityAttributes.AdditionalProperties.Keys | ForEach-Object {
                 $key = $_
-                $value = $customAttributes.CustomSecurityAttributes.AdditionalProperties.$($key) | Out-String
+                $value = $user.CustomSecurityAttributes.AdditionalProperties.$($key) | Out-String
                 # Append the custom attribute to the user information
                 $dataDetails += "`t`t$($key): $($value)"
             }
@@ -266,21 +265,21 @@ $users | ForEach-Object {
         # Check if the user is a member
         if ($user.UserType -eq "Member") {
             # Check if the user has been inactive for more than the specified number of days
-            $userData = Get-MgUser -UserId $user.Id -Property "SignInActivity,createdDateTime"
             $requestDateTime = (Get-Date).AddDays(-$InactiveDays)
-            $dataDetails += "`tAccount created: $($userData.createdDateTime)"
-            $dataDetails += ($userData.SignInActivity.LastSignInDateTime) ? "`tLast sign-in: $($userData.SignInActivity.LastSignInDateTime)" : "`tLast sign-in: Not defined"
-            $dataDetails += ($userData.SignInActivity.LastNonInteractiveSignInDateTime) ? "`tLast non-interactive sign-in: $($userData.SignInActivity.LastNonInteractiveSignInDateTime)" : "`tLast non-interactive sign-in: Not defined"
-            if ((($userData.SignInActivity.LastSignInDateTime -lt $requestDateTime) -or ($userData.SignInActivity.LastSignInDateTime -eq $null)) -and $userData.createdDateTime -lt $requestDateTime) {
+            $dataDetails += "`tAccount created: $($user.createdDateTime)"
+            $dataDetails += ($user.SignInActivity.LastSignInDateTime) ? "`tLast sign-in: $($user.SignInActivity.LastSignInDateTime)" : "`tLast sign-in: Not defined"
+            $dataDetails += ($user.SignInActivity.LastNonInteractiveSignInDateTime) ? "`tLast non-interactive sign-in: $($user.SignInActivity.LastNonInteractiveSignInDateTime)" : "`tLast non-interactive sign-in: Not defined"
+            if ((($user.SignInActivity.LastSignInDateTime -lt $requestDateTime) -or ($user.SignInActivity.LastSignInDateTime -eq $null)) -and $user.createdDateTime -lt $requestDateTime) {
                 # Add the user to the inactive members list
                 $dataInactiveMem += [PSCustomObject]@{
                     UserID = $user.ID
                     DisplayName = $user.DisplayName
                     UserPrincipalName = $user.UserPrincipalName
                     UserType = $user.UserType
-                    CreatedDateTime = $userData.createdDateTime
-                    LastSignInDateTime = ($userData.SignInActivity.LastSignInDateTime) ? $userData.SignInActivity.LastSignInDateTime : "Not defined"
-                    LastNonInteractive = ($userData.SignInActivity.LastNonInteractiveSignInDateTime) ? $userData.SignInActivity.LastNonInteractiveSignInDateTime : "Not defined"
+                    CreatedDateTime = $user.createdDateTime
+                    LastSignInDateTime = ($user.SignInActivity.LastSignInDateTime) ? $user.SignInActivity.LastSignInDateTime : "Not defined"
+                    LastNonInteractive = ($user.SignInActivity.LastNonInteractiveSignInDateTime) ? $user.SignInActivity.LastNonInteractiveSignInDateTime : "Not defined"
+                    LastSuccessfulSignIn = ($user.SignInActivity.LastSuccessfulSignInDateTime) ? $user.SignInActivity.LastSuccessfulSignInDateTime : "Not defined"
                 }
             }
         }
@@ -288,21 +287,21 @@ $users | ForEach-Object {
         # Check if the user is a guest
         if ($user.UserType -eq "Guest") {
             # Check if the user has been inactive for more than the specified number of days
-            $userData = Get-MgUser -UserId $user.Id -Property "SignInActivity,createdDateTime"
             $requestDateTime = (Get-Date).AddDays(-$InactiveDays)
-            $dataDetails += "`tAccount created: $($userData.createdDateTime)"
-            $dataDetails += ($userData.SignInActivity.LastSignInDateTime) ? "`tLast sign-in: $($userData.SignInActivity.LastSignInDateTime)" : "`tLast sign-in: Not defined"
-            $dataDetails += ($userData.SignInActivity.LastNonInteractiveSignInDateTime) ? "`tLast non-interactive sign-in: $($userData.SignInActivity.LastNonInteractiveSignInDateTime)" : "`tLast non-interactive sign-in: Not defined"
-            if ((($userData.SignInActivity.LastSignInDateTime -lt $requestDateTime) -or ($userData.SignInActivity.LastSignInDateTime -eq $null)) -and $userData.createdDateTime -lt $requestDateTime) {
+            $dataDetails += "`tAccount created: $($user.createdDateTime)"
+            $dataDetails += ($user.SignInActivity.LastSignInDateTime) ? "`tLast sign-in: $($user.SignInActivity.LastSignInDateTime)" : "`tLast sign-in: Not defined"
+            $dataDetails += ($user.SignInActivity.LastNonInteractiveSignInDateTime) ? "`tLast non-interactive sign-in: $($user.SignInActivity.LastNonInteractiveSignInDateTime)" : "`tLast non-interactive sign-in: Not defined"
+            if ((($user.SignInActivity.LastSignInDateTime -lt $requestDateTime) -or ($user.SignInActivity.LastSignInDateTime -eq $null)) -and $user.createdDateTime -lt $requestDateTime) {
                 # Add the user to the inactive guests list
                 $dataInactiveGue += [PSCustomObject]@{
                     UserID = $user.ID
                     DisplayName = $user.DisplayName
                     UserPrincipalName = $user.UserPrincipalName
                     UserType = $user.UserType
-                    CreatedDateTime = $userData.createdDateTime
-                    LastSignInDateTime = ($userData.SignInActivity.LastSignInDateTime) ? $userData.SignInActivity.LastSignInDateTime : "Not defined"
-                    LastNonInteractive = ($userData.SignInActivity.LastNonInteractiveSignInDateTime) ? $userData.SignInActivity.LastNonInteractiveSignInDateTime : "Not defined"
+                    CreatedDateTime = $user.createdDateTime
+                    LastSignInDateTime = ($user.SignInActivity.LastSignInDateTime) ? $user.SignInActivity.LastSignInDateTime : "Not defined"
+                    LastNonInteractive = ($user.SignInActivity.LastNonInteractiveSignInDateTime) ? $user.SignInActivity.LastNonInteractiveSignInDateTime : "Not defined"
+                    LastSuccessfulSignIn = ($user.SignInActivity.LastSuccessfulSignInDateTime) ? $user.SignInActivity.LastSuccessfulSignInDateTime : "Not defined"
                 }
             }
         }            
@@ -311,18 +310,18 @@ $users | ForEach-Object {
         # Check if the user is a member
         if ($user.UserType -eq "Member") {
             # Check if the user has been inactive for more than the specified number of days
-            $userData = Get-MgUser -UserId $user.Id -Property "SignInActivity,createdDateTime"
             $requestDateTime = (Get-Date).AddDays(-$InactiveDays)
-            if ((($userData.SignInActivity.LastSignInDateTime -lt $requestDateTime) -or ($userData.SignInActivity.LastSignInDateTime -eq $null)) -and $userData.createdDateTime -lt $requestDateTime) {
+            if ((($user.SignInActivity.LastSignInDateTime -lt $requestDateTime) -or ($user.SignInActivity.LastSignInDateTime -eq $null)) -and $user.createdDateTime -lt $requestDateTime) {
                 # Add the user to the inactive members list
                 $dataInactiveMem += [PSCustomObject]@{
                     UserID = $user.ID
                     DisplayName = $user.DisplayName
                     UserPrincipalName = $user.UserPrincipalName
                     UserType = $user.UserType
-                    CreatedDateTime = $userData.createdDateTime
-                    LastSignInDateTime = ($userData.SignInActivity.LastSignInDateTime) ? $userData.SignInActivity.LastSignInDateTime : "Not defined"
-                    LastNonInteractive = ($userData.SignInActivity.LastNonInteractiveSignInDateTime) ? $userData.SignInActivity.LastNonInteractiveSignInDateTime : "Not defined"
+                    CreatedDateTime = $user.createdDateTime
+                    LastSignInDateTime = ($user.SignInActivity.LastSignInDateTime) ? $user.SignInActivity.LastSignInDateTime : "Not defined"
+                    LastNonInteractive = ($user.SignInActivity.LastNonInteractiveSignInDateTime) ? $user.SignInActivity.LastNonInteractiveSignInDateTime : "Not defined"
+                    LastSuccessfulSignIn = ($user.SignInActivity.LastSuccessfulSignInDateTime) ? $user.SignInActivity.LastSuccessfulSignInDateTime : "Not defined"
                 }
             }
         }
@@ -331,18 +330,18 @@ $users | ForEach-Object {
         # Check if the user is a guest
         if ($user.UserType -eq "Guest") {
             # Check if the user has been inactive for more than the specified number of days
-            $userData = Get-MgUser -UserId $user.Id -Property "SignInActivity,createdDateTime"
             $requestDateTime = (Get-Date).AddDays(-$InactiveDays)
-            if ((($userData.SignInActivity.LastSignInDateTime -lt $requestDateTime) -or ($userData.SignInActivity.LastSignInDateTime -eq $null)) -and $userData.createdDateTime -lt $requestDateTime) {
+            if ((($user.SignInActivity.LastSignInDateTime -lt $requestDateTime) -or ($user.SignInActivity.LastSignInDateTime -eq $null)) -and $user.createdDateTime -lt $requestDateTime) {
                 # Add the user to the inactive guests list
                 $dataInactiveGue += [PSCustomObject]@{
                     UserID = $user.ID
                     DisplayName = $user.DisplayName
                     UserPrincipalName = $user.UserPrincipalName
                     UserType = $user.UserType
-                    CreatedDateTime = $userData.createdDateTime
-                    LastSignInDateTime = ($userData.SignInActivity.LastSignInDateTime) ? $userData.SignInActivity.LastSignInDateTime : "Not defined"
-                    LastNonInteractive = ($userData.SignInActivity.LastNonInteractiveSignInDateTime) ? $userData.SignInActivity.LastNonInteractiveSignInDateTime : "Not defined"
+                    CreatedDateTime = $user.createdDateTime
+                    LastSignInDateTime = ($user.SignInActivity.LastSignInDateTime) ? $user.SignInActivity.LastSignInDateTime : "Not defined"
+                    LastNonInteractive = ($user.SignInActivity.LastNonInteractiveSignInDateTime) ? $user.SignInActivity.LastNonInteractiveSignInDateTime : "Not defined"
+                    LastSuccessfulSignIn = ($user.SignInActivity.LastSuccessfulSignInDateTime) ? $user.SignInActivity.LastSuccessfulSignInDateTime : "Not defined"
                 }
             }
         }            
@@ -350,7 +349,7 @@ $users | ForEach-Object {
     } elseif ($GroupsDetails) {
         # Basic user information
         $dataUsers += [PSCustomObject]@{
-            ID = $user.ID
+            UserID = $user.ID
             DisplayName = $user.DisplayName
             UserPrincipalName = $user.UserPrincipalName
             UserType = $user.UserType
@@ -360,7 +359,7 @@ $users | ForEach-Object {
         $userMemberOf | ForEach-Object {
             $group = $_
             $dataGroups += [PSCustomObject]@{
-                ID = $group.ID
+                GroupID = $group.ID
                 DisplayName = $group.AdditionalProperties["displayName"]
                 Description = $group.AdditionalProperties["description"]
                 Mail = $group.AdditionalProperties["mail"]
@@ -374,7 +373,7 @@ $users | ForEach-Object {
     } else {
         # Default case: just get the basic user information
         $dataUsers += [PSCustomObject]@{
-            ID = $user.ID
+            UserID = $user.ID
             DisplayName = $user.DisplayName
             UserPrincipalName = $user.UserPrincipalName
             UserType = $user.UserType
