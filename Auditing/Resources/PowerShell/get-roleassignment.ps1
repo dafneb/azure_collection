@@ -159,7 +159,7 @@ $tenants | ForEach-Object {
                 Scope            = $roleAssignment.Scope
             }
         }
-    }    
+    }
 }
 
 Write-Verbose -Message "Exporting roles to CSV file ..."

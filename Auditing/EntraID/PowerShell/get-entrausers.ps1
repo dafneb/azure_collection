@@ -304,8 +304,8 @@ $users | ForEach-Object {
                     LastSuccessfulSignIn = ($user.SignInActivity.LastSuccessfulSignInDateTime) ? $user.SignInActivity.LastSuccessfulSignInDateTime : "Not defined"
                 }
             }
-        }            
-        
+        }
+
     } elseif ($InactiveMembers) {
         # Check if the user is a member
         if ($user.UserType -eq "Member") {
@@ -344,7 +344,7 @@ $users | ForEach-Object {
                     LastSuccessfulSignIn = ($user.SignInActivity.LastSuccessfulSignInDateTime) ? $user.SignInActivity.LastSuccessfulSignInDateTime : "Not defined"
                 }
             }
-        }            
+        }
 
     } elseif ($GroupsDetails) {
         # Basic user information
@@ -369,7 +369,7 @@ $users | ForEach-Object {
                 MemberUserPrincipalName = $user.UserPrincipalName
             }
         }
-        
+
     } else {
         # Default case: just get the basic user information
         $dataUsers += [PSCustomObject]@{
@@ -391,9 +391,9 @@ if ($AllDetails) {
     $dataLicenses | Export-Csv -Path $licensesFilePath -NoTypeInformation -Force
     $dataInactiveMem | Export-Csv -Path $inactiveMemFilePath -NoTypeInformation -Force
     $dataInactiveGue | Export-Csv -Path $inactiveGueFilePath -NoTypeInformation -Force
-    
+
     $dataDetails | ForEach-Object { $_ | Out-File -FilePath $detailsFilePath -Append }
-    
+
 } elseif ($InactiveMembers) {
     $dataInactiveMem | Export-Csv -Path $inactiveMemFilePath -NoTypeInformation -Force
 
