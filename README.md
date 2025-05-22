@@ -7,6 +7,7 @@
 ![GitHub contributors](https://img.shields.io/github/contributors/dafneb/azure_collection)
 
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/dafneb/azure_collection/codeql.yml?label=CodeQL)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/dafneb/azure_collection/powershell-analyzer.yml?label=PSScriptAnalyzer)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/dafneb/azure_collection/main.svg)](https://results.pre-commit.ci/latest/github/dafneb/azure_collection/main)
 
 Useful tools and scripts for Azure
