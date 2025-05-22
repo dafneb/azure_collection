@@ -173,31 +173,30 @@ $tenants | ForEach-Object {
         #     }
         # }
 
+        $dataInventory += [PSCustomObject]@{
+            TenantName         = $tenantName
+            TenantId           = $tenantId
+            TenantDomains      = $tenantDomains
+            SubscriptionName   = $subscriptionName
+            SubscriptionId     = $subscriptionId
+            SubscriptionState  = $subscriptionState
+            SubscriptionTags   = $subscriptionTags
+            SubscriptionGroup  = $subscriptionGroupName
+            ResourceGroupName  = ""
+            ResourceGroupId    = ""
+            ResourceGroupTags  = ""
+            ResourceName       = ""
+            ResourceId         = ""
+            ResourceType       = ""
+            ResourceLocation   = ""
+            ResourceSku        = ""
+            ResourceKind       = ""
+            ResourceTags       = ""
+        }
+
         # Get all resource groups for the subscription
         Write-Verbose -Message "Getting resource groups for subscription ..."
         $resourceGroups = Get-AzResourceGroup -ApiVersion "2024-11-01" -ErrorAction SilentlyContinue
-        if (-not $resourceGroups) {
-            $dataInventory += [PSCustomObject]@{
-                TenantName         = $tenantName
-                TenantId           = $tenantId
-                TenantDomains      = $tenantDomains
-                SubscriptionName   = $subscriptionName
-                SubscriptionId     = $subscriptionId
-                SubscriptionState  = $subscriptionState
-                SubscriptionTags   = $subscriptionTags
-                SubscriptionGroup  = $subscriptionGroupName
-                ResourceGroupName  = ""
-                ResourceGroupId    = ""
-                ResourceGroupTags  = ""
-                ResourceName       = ""
-                ResourceId         = ""
-                ResourceType       = ""
-                ResourceLocation   = ""
-                ResourceSku        = ""
-                ResourceKind       = ""
-                ResourceTags       = ""
-            }
-        }
         $resourceGroups | ForEach-Object {
             $resourceGroupName = $_.ResourceGroupName
             $resourceGroupId = $_.ResourceId
