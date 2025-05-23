@@ -72,7 +72,7 @@ $usersFilePath = Join-Path -Path $caseFolderPath -ChildPath "users.csv"
 $detailsFilePath = Join-Path -Path $caseFolderPath -ChildPath "users-details.txt"
 $inactiveMemFilePath = Join-Path -Path $caseFolderPath -ChildPath "inactive-members.csv"
 $inactiveGueFilePath = Join-Path -Path $caseFolderPath -ChildPath "inactive-guests.csv"
-$groupsFilePath = Join-Path -Path $caseFolderPath -ChildPath "groups.csv"
+$groupsFilePath = Join-Path -Path $caseFolderPath -ChildPath "users-groups.csv"
 $licensesFilePath = Join-Path -Path $caseFolderPath -ChildPath "licenses.csv"
 
 Write-Verbose -Message "Checking folders & files (1/2) ..."

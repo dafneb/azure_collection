@@ -27,6 +27,7 @@ Collection contains these tools and scripts:
   - Groups
     - Membership
     - Ownership
+    - Permissions and roles
 
 ## Disclaimer
 
