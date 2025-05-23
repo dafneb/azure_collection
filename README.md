@@ -27,3 +27,7 @@ Collection contains these tools and scripts:
   - Groups
     - Membership
     - Ownership
+
+## Disclaimer
+
+Scripts are provided as-is, without any warranty. Use at your own risk. Always test in a non-production environment before using in production.
