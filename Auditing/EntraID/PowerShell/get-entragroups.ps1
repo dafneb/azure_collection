@@ -97,11 +97,17 @@ Write-Verbose -Message "Getting data from Entra ID ..."
 $dataGroups = @()
 [string[]]$dataDetails = @()
 
+# Get the list of all groups in the organization
+$groups = Get-MgGroup -All
+# Loop through each group and get its details
+$groups | ForEach-Object {
+    $group = $_
+    Write-Verbose -Message "Processing group: $($group.DisplayName)"
 
+    # TODO: Add code here to get groups and their details
+    $group
 
-# TODO: Add code here to get groups and their details
-
-
+}
 
 $dataGroups | Export-Csv -Path $groupsFilePath -NoTypeInformation -Force
 $dataDetails | ForEach-Object { $_ | Out-File -FilePath $detailsFilePath -Append }

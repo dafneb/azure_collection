@@ -74,6 +74,7 @@ $inactiveMemFilePath = Join-Path -Path $caseFolderPath -ChildPath "inactive-memb
 $inactiveGueFilePath = Join-Path -Path $caseFolderPath -ChildPath "inactive-guests.csv"
 $groupsFilePath = Join-Path -Path $caseFolderPath -ChildPath "users-groups.csv"
 $licensesFilePath = Join-Path -Path $caseFolderPath -ChildPath "licenses.csv"
+$syncedFilePath = Join-Path -Path $caseFolderPath -ChildPath "synced-users.csv"
 
 Write-Verbose -Message "Checking folders & files (1/2) ..."
 
@@ -142,6 +143,14 @@ if ($AllDetails) {
         Clear-Content -Path $licensesFilePath | Out-Null
     }
 
+    if (-not (Test-Path -Path $syncedFilePath)) {
+        Write-Verbose -Message "Synced users file does not exist, creating it..."
+        New-Item -ItemType File -Path $syncedFilePath | Out-Null
+    } else {
+        Write-Verbose -Message "Synced users file already exists, clear it..."
+        Clear-Content -Path $syncedFilePath | Out-Null
+    }
+
 } elseif ($InactiveMembers) {
     if (-not (Test-Path -Path $inactiveMemFilePath)) {
         Write-Verbose -Message "Inactive members file does not exist, creating it..."
@@ -196,13 +205,14 @@ $dataInactiveMem = @()
 $dataInactiveGue = @()
 $dataGroups = @()
 $dataLicenses = @()
+$dataSynced = @()
 
 # Get the list of all users in the organization
-$users = Get-MgUser -All -Property "id,displayName,userPrincipalName,userType,customSecurityAttributes,SignInActivity,createdDateTime" | Select-Object -Property id,displayName,userPrincipalName,userType,customSecurityAttributes,SignInActivity,createdDateTime
+$users = Get-MgUser -All -Property "id,displayName,userPrincipalName,userType,customSecurityAttributes,SignInActivity,createdDateTime,onPremisesSyncEnabled" | Select-Object -Property id,displayName,userPrincipalName,userType,customSecurityAttributes,SignInActivity,createdDateTime,onPremisesSyncEnabled
 # Loop through each user and retrieve their custom security attributes
 $users | ForEach-Object {
     $user = $_
-    Write-Verbose -Message "DisplayName: $($user.DisplayName)"
+    Write-Verbose -Message "Processing user: $($user.DisplayName)"
 
     if ($AllDetails) {
         # Get all possible details for the user
@@ -306,6 +316,16 @@ $users | ForEach-Object {
             }
         }
 
+        # Check if the user is synced from on-premises
+        if ($user.onPremisesSyncEnabled) {
+            $dataSynced += [PSCustomObject]@{
+                UserID = $user.ID
+                DisplayName = $user.DisplayName
+                UserPrincipalName = $user.UserPrincipalName
+                UserType = $user.UserType
+            }
+        }
+
     } elseif ($InactiveMembers) {
         # Check if the user is a member
         if ($user.UserType -eq "Member") {
@@ -391,6 +411,7 @@ if ($AllDetails) {
     $dataLicenses | Export-Csv -Path $licensesFilePath -NoTypeInformation -Force
     $dataInactiveMem | Export-Csv -Path $inactiveMemFilePath -NoTypeInformation -Force
     $dataInactiveGue | Export-Csv -Path $inactiveGueFilePath -NoTypeInformation -Force
+    $dataSynced | Export-Csv -Path $syncedFilePath -NoTypeInformation -Force
 
     $dataDetails | ForEach-Object { $_ | Out-File -FilePath $detailsFilePath -Append }
 
