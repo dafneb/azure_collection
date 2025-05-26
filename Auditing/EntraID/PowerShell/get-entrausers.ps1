@@ -317,6 +317,7 @@ $users | ForEach-Object {
         }
 
         # Check if the user is synced from on-premises
+        $dataDetails += "`tOn-prem sync enabled: $($user.OnPremisesSyncEnabled)"
         if ($user.onPremisesSyncEnabled) {
             $dataSynced += [PSCustomObject]@{
                 UserID = $user.ID

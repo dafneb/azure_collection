@@ -31,6 +31,6 @@ $TenantId = 'yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyy'
 Connect-MgGraph -TenantId $TenantId -Scopes 'User.Read.All', 'Group.Read.All', 'Directory.Read.All', 'AuditLog.Read.All', 'GroupMember.Read.All', 'Sites.Read.All'
 
 $TenantId = 'yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyy'
-Connect-MgGraph -TenantId $TenantId -Scopes 'User.Read.All', 'Group.Read.All', 'Directory.Read.All', 'AuditLog.Read.All', 'GroupMember.Read.All', 'Sites.Read.All' -UseDeviceAuthentication
+Connect-MgGraph -TenantId $TenantId -Scopes 'User.Read.All', 'Group.Read.All', 'Directory.Read.All', 'AuditLog.Read.All', 'GroupMember.Read.All', 'Sites.Read.All', 'Application.Read.All' -UseDeviceAuthentication
 
-Connect-MgGraph -Scopes 'User.Read.All', 'Group.Read.All', 'Directory.Read.All', 'AuditLog.Read.All', 'GroupMember.Read.All', 'Sites.Read.All' -UseDeviceAuthentication
+Connect-MgGraph -Scopes 'User.Read.All', 'Group.Read.All', 'Directory.Read.All', 'AuditLog.Read.All', 'GroupMember.Read.All', 'Sites.Read.All', 'Application.Read.All' -UseDeviceAuthentication
