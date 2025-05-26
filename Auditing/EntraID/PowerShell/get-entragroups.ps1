@@ -83,6 +83,7 @@ if (-not (Test-Path -Path $detailsFilePath)) {
     Clear-Content -Path $detailsFilePath | Out-Null
 }
 
+# Check if the sync details file already exists
 if (-not (Test-Path -Path $syncedFilePath)) {
     Write-Verbose -Message "Synced groups file does not exist, creating it..."
     New-Item -ItemType File -Path $syncedFilePath | Out-Null
