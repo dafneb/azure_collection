@@ -129,9 +129,9 @@ $tenants | ForEach-Object {
                 }
                 $amountInTotal = 0
                 $metricIn.Data | ForEach-Object {
-                    $indexIn = $_.TimeStamp.ToString("yyyy-MM-ddTHH:mm:ssZ")
+                    #$indexIn = $_.TimeStamp.ToString("yyyy-MM-ddTHH:mm:ssZ")
                     $amountIn = $_.Total / 1GB # Convert bytes to GB
-                    $trafficDataIn[$indexIn] = "{0:N8}" -f $amountIn
+                    #$trafficDataIn[$indexIn] = "{0:N8}" -f $amountIn
                     $amountInTotal += $amountIn
                 }
                 $trafficDataIn["TotalAmounts"] = "{0:N8}" -f $amountInTotal
@@ -155,15 +155,22 @@ $tenants | ForEach-Object {
                 }
                 $amountOutTotal = 0
                 $metricOut.Data | ForEach-Object {
-                    $indexOut = $_.TimeStamp.ToString("yyyy-MM-ddTHH:mm:ssZ")
+                    #$indexOut = $_.TimeStamp.ToString("yyyy-MM-ddTHH:mm:ssZ")
                     $amountOut = $_.Total / 1GB # Convert bytes to GB
-                    $trafficDataOut[$indexOut] = "{0:N8}" -f $amountOut  
+                    #$trafficDataOut[$indexOut] = "{0:N8}" -f $amountOut  
                     $amountOutTotal += $amountOut
                 }
                 $trafficDataOut["TotalAmounts"] = "{0:N8}" -f $amountOutTotal
                 $dataTraffic += [PSCustomObject]$trafficDataOut
             }
         }
+
+        # TODO: Get network traffic data for Application Gateways
+        # TODO: Get network traffic data for VPN Gateways
+        # TODO: Get network traffic data for NAT Gateways
+        # TODO: Get network traffic data for Bastions
+        # TODO: Get network traffic data for blob services
+
 
     }
 }
