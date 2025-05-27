@@ -108,6 +108,7 @@ if (Test-Path -Path $roleFilePath) {
         Write-Verbose -Message "Appending to existing file ..."
     }
 }
+
 Write-Verbose -Message "Listing roles from Azure ..."
 
 $dataRoles = @()
