@@ -108,23 +108,268 @@ $tenants | ForEach-Object {
             continue
         }
 
-        # Get network traffic data for Web Apps
-        $webApps = Get-AzWebApp -ErrorAction SilentlyContinue
-        $webApps | ForEach-Object {
-            $webApp = $_
-            $metricIn = Get-AzMetric -ResourceId $webApp.Id -MetricName "BytesReceived" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime -ErrorAction SilentlyContinue
+        $resourceGroups = Get-AzResourceGroup -ErrorAction SilentlyContinue
+        if (-not $resourceGroups) {
+            Write-Warning -Message "No resource groups found for subscription $subscriptionName ($subscriptionId)"
+        }
+        $resourceGroups | ForEach-Object {
+            $resGroup = $_
+            Write-Verbose -Message "Processing resource group: $($resGroup.ResourceGroupName)"
+
+            # Get network traffic data for Web Apps
+            $webApps = Get-AzWebApp -ResourceGroupName $resGroup.ResourceGroupName -ProgressAction Ignore -ErrorAction SilentlyContinue
+            $webApps | ForEach-Object {
+                $webApp = $_
+                
+                $metricIn = Get-AzMetric -ResourceId $webApp.Id -MetricName "BytesReceived" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime -ErrorAction SilentlyContinue
+                if ($metricIn.Data.Count -gt 0) {
+                    $trafficDataIn = @{
+                        TenantId = $tenantId
+                        TenantName = $tenantName
+                        SubscriptionId = $subscriptionId
+                        SubscriptionName = $subscriptionName
+                        ResourceId = $webApp.Id
+                        ResourceType = $webApp.Type
+                        ResourceGroup = $resGroup.ResourceGroupName
+                        Location = $webApp.Location
+                        Kind = $webApp.Kind
+                        ResourceName = $webApp.Name
+                        Direction = "Inbound"
+                    }
+                    $amountInTotal = 0
+                    $metricIn.Data | ForEach-Object {
+                        #$indexIn = $_.TimeStamp.ToString("yyyy-MM-ddTHH:mm:ssZ")
+                        $amountIn = $_.Total / 1GB # Convert bytes to GB
+                        #$trafficDataIn[$indexIn] = "{0:N8}" -f $amountIn
+                        $amountInTotal += $amountIn
+                    }
+                    $trafficDataIn["TotalAmounts"] = "{0:N8}" -f $amountInTotal
+                    $dataTraffic += [PSCustomObject]$trafficDataIn
+                }
+
+                $metricOut = Get-AzMetric -ResourceId $webApp.Id -MetricName "BytesSent" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime -ErrorAction SilentlyContinue
+                if ($metricOut.Data.Count -gt 0) {
+                    $trafficDataOut = @{
+                        TenantId = $tenantId
+                        TenantName = $tenantName
+                        SubscriptionId = $subscriptionId
+                        SubscriptionName = $subscriptionName
+                        ResourceId = $webApp.Id
+                        ResourceType = $webApp.Type
+                        ResourceGroup = $resGroup.ResourceGroupName
+                        Location = $webApp.Location
+                        Kind = $webApp.Kind
+                        ResourceName = $webApp.Name
+                        Direction = "Outbound"
+                    }
+                    $amountOutTotal = 0
+                    $metricOut.Data | ForEach-Object {
+                        #$indexOut = $_.TimeStamp.ToString("yyyy-MM-ddTHH:mm:ssZ")
+                        $amountOut = $_.Total / 1GB # Convert bytes to GB
+                        #$trafficDataOut[$indexOut] = "{0:N8}" -f $amountOut  
+                        $amountOutTotal += $amountOut
+                    }
+                    $trafficDataOut["TotalAmounts"] = "{0:N8}" -f $amountOutTotal
+                    $dataTraffic += [PSCustomObject]$trafficDataOut
+                }
+            }
+
+            # Get network traffic data for Application Gateways
+            $appGateways = Get-AzApplicationGateway -ResourceGroupName $resGroup.ResourceGroupName -ProgressAction Ignore -ErrorAction SilentlyContinue
+            $appGateways | ForEach-Object {
+                $appGateway = $_
+
+                $metricIn = Get-AzMetric -ResourceId $appGateway.Id -MetricName "BytesReceived" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime #-ErrorAction SilentlyContinue
+                if ($metricIn.Data.Count -gt 0) {
+                    $trafficDataIn = @{
+                        TenantId = $tenantId
+                        TenantName = $tenantName
+                        SubscriptionId = $subscriptionId
+                        SubscriptionName = $subscriptionName
+                        ResourceId = $appGateway.Id
+                        ResourceType = $appGateway.Type
+                        ResourceGroup = $resGroup.ResourceGroupName
+                        Location = $appGateway.Location
+                        Kind = $appGateway.Kind
+                        ResourceName = $appGateway.Name
+                        Direction = "Inbound"
+                    }
+                    $amountInTotal = 0
+                    $metricIn.Data | ForEach-Object {
+                        #$indexIn = $_.TimeStamp.ToString("yyyy-MM-ddTHH:mm:ssZ")
+                        $amountIn = $_.Total / 1GB # Convert bytes to GB
+                        #$trafficDataIn[$indexIn] = "{0:N8}" -f $amountIn
+                        $amountInTotal += $amountIn
+                    }
+                    $trafficDataIn["TotalAmounts"] = "{0:N8}" -f $amountInTotal
+                    $dataTraffic += [PSCustomObject]$trafficDataIn
+                }
+
+                $metricOut = Get-AzMetric -ResourceId $appGateway.Id -MetricName "BytesSent" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime #-ErrorAction SilentlyContinue
+                if ($metricOut.Data.Count -gt 0) {
+                    $trafficDataOut = @{
+                        TenantId = $tenantId
+                        TenantName = $tenantName
+                        SubscriptionId = $subscriptionId
+                        SubscriptionName = $subscriptionName
+                        ResourceId = $appGateway.Id
+                        ResourceType = $appGateway.Type
+                        ResourceGroup = $resGroup.ResourceGroupName
+                        Location = $appGateway.Location
+                        Kind = $appGateway.Kind
+                        ResourceName = $appGateway.Name
+                        Direction = "Outbound"
+                    }
+                    $amountOutTotal = 0
+                    $metricOut.Data | ForEach-Object {
+                        #$indexIn = $_.TimeStamp.ToString("yyyy-MM-ddTHH:mm:ssZ")
+                        $amountOut = $_.Total / 1GB # Convert bytes to GB
+                        #$trafficDataIn[$indexIn] = "{0:N8}" -f $amountIn
+                        $amountOutTotal += $amountOut
+                    }
+                    $trafficDataIn["TotalAmounts"] = "{0:N8}" -f $amountOutTotal
+                    $dataTraffic += [PSCustomObject]$trafficDataOut
+                }
+            }
+
+            # Get network traffic data for Virtual Network Gateways
+            $virtualGateways = Get-AzVirtualNetworkGateway -ResourceGroupName $resGroup.ResourceGroupName -ProgressAction Ignore -ErrorAction SilentlyContinue
+            $virtualGateways | ForEach-Object {
+                $vpnGateway = $_
+
+                $metricIn = Get-AzMetric -ResourceId $vpnGateway.Id -MetricName "TunnelIngressBytes" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime #-ErrorAction SilentlyContinue
+                if ($metricIn.Data.Count -gt 0) {
+                    $trafficDataIn = @{
+                        TenantId = $tenantId
+                        TenantName = $tenantName
+                        SubscriptionId = $subscriptionId
+                        SubscriptionName = $subscriptionName
+                        ResourceId = $vpnGateway.Id
+                        ResourceType = $vpnGateway.Type
+                        ResourceGroup = $resGroup.ResourceGroupName
+                        Location = $vpnGateway.Location
+                        Kind = "tunnel" # VPN Gateways are typically of kind "Tunnel"
+                        ResourceName = $vpnGateway.Name
+                        Direction = "Inbound"
+                    }
+                    $amountInTotal = 0
+                    $metricIn.Data | ForEach-Object {
+                        #$indexIn = $_.TimeStamp.ToString("yyyy-MM-ddTHH:mm:ssZ")
+                        $amountIn = $_.Total / 1GB # Convert bytes to GB
+                        #$trafficDataIn[$indexIn] = "{0:N8}" -f $amountIn
+                        $amountInTotal += $amountIn
+                    }
+                    $trafficDataIn["TotalAmounts"] = "{0:N8}" -f $amountInTotal
+                    $dataTraffic += [PSCustomObject]$trafficDataIn
+                }
+
+                $metricOut = Get-AzMetric -ResourceId $vpnGateway.Id -MetricName "TunnelEgressBytes" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime #-ErrorAction SilentlyContinue
+                if ($metricOut.Data.Count -gt 0) {
+                    $trafficDataOut = @{
+                        TenantId = $tenantId
+                        TenantName = $tenantName
+                        SubscriptionId = $subscriptionId
+                        SubscriptionName = $subscriptionName
+                        ResourceId = $vpnGateway.Id
+                        ResourceType = $vpnGateway.Type
+                        ResourceGroup = $resGroup.ResourceGroupName
+                        Location = $vpnGateway.Location
+                        Kind = "tunnel" # VPN Gateways are typically of kind "Tunnel"
+                        ResourceName = $vpnGateway.Name
+                        Direction = "Outbound"
+                    }
+                    $amountOutTotal = 0
+                    $metricOut.Data | ForEach-Object {
+                        #$indexIn = $_.TimeStamp.ToString("yyyy-MM-ddTHH:mm:ssZ")
+                        $amountOut = $_.Total / 1GB # Convert bytes to GB
+                        #$trafficDataIn[$indexIn] = "{0:N8}" -f $amountIn
+                        $amountOutTotal += $amountOut
+                    }
+                    $trafficDataIn["TotalAmounts"] = "{0:N8}" -f $amountOutTotal
+                    $dataTraffic += [PSCustomObject]$trafficDataOut
+                }
+
+                $metricNat = Get-AzMetric -ResourceId $vpnGateway.Id -MetricName "TunnelNatedBytes" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime #-ErrorAction SilentlyContinue
+                if ($metricNat.Data.Count -gt 0) {
+                    $trafficDataNat = @{
+                        TenantId = $tenantId
+                        TenantName = $tenantName
+                        SubscriptionId = $subscriptionId
+                        SubscriptionName = $subscriptionName
+                        ResourceId = $vpnGateway.Id
+                        ResourceType = $vpnGateway.Type
+                        ResourceGroup = $resGroup.ResourceGroupName
+                        Location = $vpnGateway.Location
+                        Kind = "nat" # VPN Gateways are typically of kind "Tunnel"
+                        ResourceName = $vpnGateway.Name
+                        Direction = "Nated"
+                    }
+                    $amountNatTotal = 0
+                    $metricNat.Data | ForEach-Object {
+                        #$indexIn = $_.TimeStamp.ToString("yyyy-MM-ddTHH:mm:ssZ")
+                        $amountNat = $_.Total / 1GB # Convert bytes to GB
+                        #$trafficDataIn[$indexIn] = "{0:N8}" -f $amountIn
+                        $amountNatTotal += $amountNat
+                    }
+                    $trafficDataNat["TotalAmounts"] = "{0:N8}" -f $amountNatTotal
+                    $dataTraffic += [PSCustomObject]$trafficDataNat
+                }
+
+            }
+
+            # Get network traffic data for NAT Gateways
+            $natGateways = Get-AzNatGateway -ResourceGroupName $resGroup.ResourceGroupName -ProgressAction Ignore -ErrorAction SilentlyContinue
+            $natGateways | ForEach-Object {
+                $natGateway = $_
+
+                $metricNat = Get-AzMetric -ResourceId $natGateway.Id -MetricName "ByteCount" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime #-ErrorAction SilentlyContinue
+                if ($metricNat.Data.Count -gt 0) {
+                    $trafficDataNat = @{
+                        TenantId = $tenantId
+                        TenantName = $tenantName
+                        SubscriptionId = $subscriptionId
+                        SubscriptionName = $subscriptionName
+                        ResourceId = $natGateway.Id
+                        ResourceType = $natGateway.Type
+                        ResourceGroup = $resGroup.ResourceGroupName
+                        Location = $natGateway.Location
+                        Kind = "nat"
+                        ResourceName = $natGateway.Name
+                        Direction = "Nated"
+                    }
+                    $amountNatTotal = 0
+                    $metricNat.Data | ForEach-Object {
+                        #$indexIn = $_.TimeStamp.ToString("yyyy-MM-ddTHH:mm:ssZ")
+                        $amountNat = $_.Total / 1GB # Convert bytes to GB
+                        #$trafficDataIn[$indexIn] = "{0:N8}" -f $amountIn
+                        $amountNatTotal += $amountNat
+                    }
+                    $trafficDataNat["TotalAmounts"] = "{0:N8}" -f $amountNatTotal
+                    $dataTraffic += [PSCustomObject]$trafficDataNat
+                }
+
+            }
+
+        }
+
+        # Get network traffic data for VPN Gateways
+        $vpnGateways = Get-AzVpnGateway -ProgressAction Ignore -ErrorAction SilentlyContinue
+        $vpnGateways | ForEach-Object {
+            $vpnGateway = $_
+
+            $metricIn = Get-AzMetric -ResourceId $vpnGateway.Id -MetricName "TunnelIngressBytes" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime #-ErrorAction SilentlyContinue
             if ($metricIn.Data.Count -gt 0) {
                 $trafficDataIn = @{
                     TenantId = $tenantId
                     TenantName = $tenantName
                     SubscriptionId = $subscriptionId
                     SubscriptionName = $subscriptionName
-                    ResourceId = $webApp.Id
-                    ResourceType = $webApp.Type
-                    ResourceGroup = $webApp.ResourceGroup
-                    Location = $webApp.Location
-                    Kind = $webApp.Kind
-                    ResourceName = $webApp.Name
+                    ResourceId = $vpnGateway.Id
+                    ResourceType = $vpnGateway.Type
+                    ResourceGroup = $vpnGateway.ResourceGroup
+                    Location = $vpnGateway.Location
+                    Kind = "tunnel" # VPN Gateways are typically of kind "Tunnel"
+                    ResourceName = $vpnGateway.Name
                     Direction = "Inbound"
                 }
                 $amountInTotal = 0
@@ -138,39 +383,59 @@ $tenants | ForEach-Object {
                 $dataTraffic += [PSCustomObject]$trafficDataIn
             }
 
-            $metricOut = Get-AzMetric -ResourceId $webApp.Id -MetricName "BytesSent" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime -ErrorAction SilentlyContinue
+            $metricOut = Get-AzMetric -ResourceId $vpnGateway.Id -MetricName "TunnelEgressBytes" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime #-ErrorAction SilentlyContinue
             if ($metricOut.Data.Count -gt 0) {
                 $trafficDataOut = @{
                     TenantId = $tenantId
                     TenantName = $tenantName
                     SubscriptionId = $subscriptionId
                     SubscriptionName = $subscriptionName
-                    ResourceId = $webApp.Id
-                    ResourceType = $webApp.Type
-                    ResourceGroup = $webApp.ResourceGroup
-                    Location = $webApp.Location
-                    Kind = $webApp.Kind
-                    ResourceName = $webApp.Name
+                    ResourceId = $vpnGateway.Id
+                    ResourceType = $vpnGateway.Type
+                    ResourceGroup = $vpnGateway.ResourceGroup
+                    Location = $vpnGateway.Location
+                    Kind = "tunnel" # VPN Gateways are typically of kind "Tunnel"
+                    ResourceName = $vpnGateway.Name
                     Direction = "Outbound"
                 }
                 $amountOutTotal = 0
                 $metricOut.Data | ForEach-Object {
-                    #$indexOut = $_.TimeStamp.ToString("yyyy-MM-ddTHH:mm:ssZ")
+                    #$indexIn = $_.TimeStamp.ToString("yyyy-MM-ddTHH:mm:ssZ")
                     $amountOut = $_.Total / 1GB # Convert bytes to GB
-                    #$trafficDataOut[$indexOut] = "{0:N8}" -f $amountOut  
+                    #$trafficDataIn[$indexIn] = "{0:N8}" -f $amountIn
                     $amountOutTotal += $amountOut
                 }
-                $trafficDataOut["TotalAmounts"] = "{0:N8}" -f $amountOutTotal
+                $trafficDataIn["TotalAmounts"] = "{0:N8}" -f $amountOutTotal
                 $dataTraffic += [PSCustomObject]$trafficDataOut
             }
+
+            $metricNat = Get-AzMetric -ResourceId $vpnGateway.Id -MetricName "TunnelNatedBytes" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime #-ErrorAction SilentlyContinue
+            if ($metricNat.Data.Count -gt 0) {
+                $trafficDataNat = @{
+                    TenantId = $tenantId
+                    TenantName = $tenantName
+                    SubscriptionId = $subscriptionId
+                    SubscriptionName = $subscriptionName
+                    ResourceId = $vpnGateway.Id
+                    ResourceType = $vpnGateway.Type
+                    ResourceGroup = $vpnGateway.ResourceGroup
+                    Location = $vpnGateway.Location
+                    Kind = "nat" # VPN Gateways are typically of kind "Tunnel"
+                    ResourceName = $vpnGateway.Name
+                    Direction = "Nated"
+                }
+                $amountNatTotal = 0
+                $metricNat.Data | ForEach-Object {
+                    #$indexIn = $_.TimeStamp.ToString("yyyy-MM-ddTHH:mm:ssZ")
+                    $amountNat = $_.Total / 1GB # Convert bytes to GB
+                    #$trafficDataIn[$indexIn] = "{0:N8}" -f $amountIn
+                    $amountNatTotal += $amountNat
+                }
+                $trafficDataNat["TotalAmounts"] = "{0:N8}" -f $amountNatTotal
+                $dataTraffic += [PSCustomObject]$trafficDataNat
+            }
+
         }
-
-        # TODO: Get network traffic data for Application Gateways
-        # TODO: Get network traffic data for VPN Gateways
-        # TODO: Get network traffic data for NAT Gateways
-        # TODO: Get network traffic data for Bastions
-        # TODO: Get network traffic data for blob services
-
 
     }
 }
