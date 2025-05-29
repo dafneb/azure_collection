@@ -49,7 +49,7 @@ $baseFolderPath = Join-Path -Path (Get-Location) -ChildPath "case"
 $caseFolderPath = Join-Path -Path $baseFolderPath -ChildPath "$($caseFolderName)"
 $detailsFilePath = Join-Path -Path $caseFolderPath -ChildPath "applications-details.txt"
 $applicationsFilePath = Join-Path -Path $caseFolderPath -ChildPath "applications.csv"
-$appAtokenFilePath = Join-Path -Path $caseFolderPath -ChildPath "applications-atoken.csv"
+$appTokensFilePath = Join-Path -Path $caseFolderPath -ChildPath "applications-tokens.csv"
 
 
 Write-Verbose -Message "Checking folders & files (1/2) ..."
@@ -76,12 +76,12 @@ if (-not (Test-Path -Path $applicationsFilePath)) {
 }
 
 # Chekc if access token file already exists
-if (-not (Test-Path -Path $appAtokenFilePath)) {
+if (-not (Test-Path -Path $appTokensFilePath)) {
     Write-Verbose -Message "Applications file does not exist, creating it..."
-    New-Item -ItemType File -Path $appAtokenFilePath | Out-Null
+    New-Item -ItemType File -Path $appTokensFilePath | Out-Null
 } else {
     Write-Verbose -Message "Applications file already exists, clear it..."
-    Clear-Content -Path $appAtokenFilePath | Out-Null
+    Clear-Content -Path $appTokensFilePath | Out-Null
 }
 
 # Check if the applications details file already exists
@@ -106,6 +106,7 @@ Write-Verbose -Message "Getting data from Entra ID ..."
 
 # Prepare arrays for storing data
 $dataApps = @()
+$dataTokens = @()
 [string[]]$dataDetails = @()
 
 # Get list of all applications ...
@@ -120,6 +121,7 @@ $apps | ForEach-Object {
 }
 
 $dataApps | Export-Csv -Path $applicationsFilePath -NoTypeInformation -Force
+$dataTokens | Export-Csv -Path $appTokensFilePath -NoTypeInformation -Force
 $dataDetails | ForEach-Object { $_ | Out-File -FilePath $detailsFilePath -Append }
 
 # Get actual date and time ...

@@ -81,7 +81,7 @@ Write-Verbose -Message "Listing traffic data from Azure ..."
 
 $dataTraffic = @()
 $days = 30 # Define the number of days for which to retrieve traffic data
-$endTime = Get-Date -Date "2025-04-01T00:00:00"
+$endTime = Get-Date -Date "2025-05-20T00:00:00"
 $startTime = $endTime.AddDays(-$days) # Adjust the time range as needed
 
 $tenants = Get-AzTenant -ErrorAction SilentlyContinue
@@ -227,7 +227,7 @@ $tenants | ForEach-Object {
                         #$trafficDataIn[$indexIn] = "{0:N8}" -f $amountIn
                         $amountOutTotal += $amountOut
                     }
-                    $trafficDataIn["TotalAmounts"] = "{0:N8}" -f $amountOutTotal
+                    $trafficDataOut["TotalAmounts"] = "{0:N8}" -f $amountOutTotal
                     $dataTraffic += [PSCustomObject]$trafficDataOut
                 }
             }
@@ -285,7 +285,7 @@ $tenants | ForEach-Object {
                         #$trafficDataIn[$indexIn] = "{0:N8}" -f $amountIn
                         $amountOutTotal += $amountOut
                     }
-                    $trafficDataIn["TotalAmounts"] = "{0:N8}" -f $amountOutTotal
+                    $trafficDataOut["TotalAmounts"] = "{0:N8}" -f $amountOutTotal
                     $dataTraffic += [PSCustomObject]$trafficDataOut
                 }
 
@@ -405,7 +405,7 @@ $tenants | ForEach-Object {
                     #$trafficDataIn[$indexIn] = "{0:N8}" -f $amountIn
                     $amountOutTotal += $amountOut
                 }
-                $trafficDataIn["TotalAmounts"] = "{0:N8}" -f $amountOutTotal
+                $trafficDataOut["TotalAmounts"] = "{0:N8}" -f $amountOutTotal
                 $dataTraffic += [PSCustomObject]$trafficDataOut
             }
 
