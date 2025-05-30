@@ -117,6 +117,17 @@ $apps | ForEach-Object {
     Write-Verbose -Message "Processing applications: $($appka.DisplayName)"
 
     # TODO: Add code here to get groups and their details
+    "--- Application ---" | Out-File -FilePath $detailsFilePath -Append
+    $appka | Format-List | Out-File -FilePath $detailsFilePath -Append
+    "--- Application.OptionalClaims ---" | Out-File -FilePath $detailsFilePath -Append
+    $appka.OptionalClaims | Format-List | Out-File -FilePath $detailsFilePath -Append
+    "--- Application.AuthenticationBehaviors ---" | Out-File -FilePath $detailsFilePath -Append
+    $appka.AuthenticationBehaviors | Format-List | Out-File -FilePath $detailsFilePath -Append
+    "--- Application.Web ---" | Out-File -FilePath $detailsFilePath -Append
+    $appka.Web | Format-List | Out-File -FilePath $detailsFilePath -Append
+    "--- Application.Web.ImplicitGrantSettings ---" | Out-File -FilePath $detailsFilePath -Append
+    $appka.Web.ImplicitGrantSettings | Format-List | Out-File -FilePath $detailsFilePath -Append
+    "------------------------------------------------------" | Out-File -FilePath $detailsFilePath -Append
 
 }
 
