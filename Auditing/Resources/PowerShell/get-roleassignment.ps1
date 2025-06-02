@@ -84,6 +84,7 @@ $caseFolderName = $caseFolderName -replace '[\\/:*?"<>|]', '_'
 $baseFolderPath = Join-Path -Path (Get-Location) -ChildPath "case"
 $caseFolderPath = Join-Path -Path $baseFolderPath -ChildPath "$($caseFolderName)"
 $roleFilePath = Join-Path -Path $caseFolderPath -ChildPath "roleassignment.csv"
+$pimFilePath = Join-Path -Path $caseFolderPath -ChildPath "roleassignment-pim.csv"
 
 Write-Verbose -Message "Checking folders (1/2) ..."
 
