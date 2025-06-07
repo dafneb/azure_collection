@@ -83,6 +83,8 @@ $dataTraffic = @()
 $days = 30 # Define the number of days for which to retrieve traffic data
 $endTime = Get-Date -Date "2025-05-20T00:00:00"
 $startTime = $endTime.AddDays(-$days) # Adjust the time range as needed
+$difference = New-TimeSpan -End $endTime -Start $startTime
+Write-Host -Message "Time range for traffic data: $($startTime) to $($endTime) ($($difference.TotalDays) days; $($difference.TotalHours) hours; $($difference.TotalMinutes) minutes; $($difference.TotalSeconds) seconds)"
 
 $tenants = Get-AzTenant -ErrorAction SilentlyContinue
 if (-not $tenants) {
@@ -121,7 +123,7 @@ $tenants | ForEach-Object {
             $virtualGateways | ForEach-Object {
                 $resourceItem = $_
 
-                $metricIn = Get-AzMetric -ResourceId $resourceItem.Id -MetricName "TunnelIngressBytes" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime #-ErrorAction SilentlyContinue
+                $metricIn = Get-AzMetric -ResourceId $resourceItem.Id -MetricName "TunnelIngressBytes" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime
                 if ($metricIn.Data.Count -gt 0) {
                     $trafficDataIn = @{
                         TenantId = $tenantId
@@ -135,17 +137,19 @@ $tenants | ForEach-Object {
                         Kind = "tunnel" # VPN Gateways are typically of kind "Tunnel"
                         ResourceName = $resourceItem.Name
                         Direction = "Inbound"
+                        TotalAmounts = "0.00000000" # Placeholder for total amounts
+                        TotalConnections = "0" # Placeholder for total connections
+                        TotalThroughput = "0.00000000" # Placeholder for total throughput
                     }
                     $amountInTotal = 0
                     $metricIn.Data | ForEach-Object {
-                        $amountIn = $_.Total / 1GB # Convert bytes to GB
-                        $amountInTotal += $amountIn
+                        $amountInTotal += $_.Total
                     }
-                    $trafficDataIn["TotalAmounts"] = "{0:N8}" -f $amountInTotal
+                    $trafficDataIn["TotalAmounts"] = "{0:N8}" -f ($amountInTotal / 1GB)
                     $dataTraffic += [PSCustomObject]$trafficDataIn
                 }
 
-                $metricOut = Get-AzMetric -ResourceId $resourceItem.Id -MetricName "TunnelEgressBytes" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime #-ErrorAction SilentlyContinue
+                $metricOut = Get-AzMetric -ResourceId $resourceItem.Id -MetricName "TunnelEgressBytes" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime
                 if ($metricOut.Data.Count -gt 0) {
                     $trafficDataOut = @{
                         TenantId = $tenantId
@@ -159,17 +163,19 @@ $tenants | ForEach-Object {
                         Kind = "tunnel" # VPN Gateways are typically of kind "Tunnel"
                         ResourceName = $resourceItem.Name
                         Direction = "Outbound"
+                        TotalAmounts = "0.00000000" # Placeholder for total amounts
+                        TotalConnections = "0" # Placeholder for total connections
+                        TotalThroughput = "0.00000000" # Placeholder for total throughput
                     }
                     $amountOutTotal = 0
                     $metricOut.Data | ForEach-Object {
-                        $amountOut = $_.Total / 1GB # Convert bytes to GB
-                        $amountOutTotal += $amountOut
+                        $amountOutTotal += $_.Total
                     }
-                    $trafficDataOut["TotalAmounts"] = "{0:N8}" -f $amountOutTotal
+                    $trafficDataOut["TotalAmounts"] = "{0:N8}" -f ($amountOutTotal / 1GB)
                     $dataTraffic += [PSCustomObject]$trafficDataOut
                 }
 
-                $metricNat = Get-AzMetric -ResourceId $resourceItem.Id -MetricName "TunnelNatedBytes" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime #-ErrorAction SilentlyContinue
+                $metricNat = Get-AzMetric -ResourceId $resourceItem.Id -MetricName "TunnelNatedBytes" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime
                 if ($metricNat.Data.Count -gt 0) {
                     $trafficDataNat = @{
                         TenantId = $tenantId
@@ -180,17 +186,71 @@ $tenants | ForEach-Object {
                         ResourceType = $resourceItem.Type
                         ResourceGroup = $resGroup.ResourceGroupName
                         Location = $resourceItem.Location
-                        Kind = "nat" # VPN Gateways are typically of kind "Tunnel"
+                        Kind = "tunnel" # VPN Gateways are typically of kind "Tunnel"
                         ResourceName = $resourceItem.Name
                         Direction = "Nated"
+                        TotalAmounts = "0.00000000" # Placeholder for total amounts
+                        TotalConnections = "0" # Placeholder for total connections
+                        TotalThroughput = "0.00000000" # Placeholder for total throughput
                     }
                     $amountNatTotal = 0
                     $metricNat.Data | ForEach-Object {
-                        $amountNat = $_.Total / 1GB # Convert bytes to GB
-                        $amountNatTotal += $amountNat
+                        $amountNatTotal += $_.Total
                     }
-                    $trafficDataNat["TotalAmounts"] = "{0:N8}" -f $amountNatTotal
+                    $trafficDataNat["TotalAmounts"] = "{0:N8}" -f ($amountNatTotal / 1GB)
                     $dataTraffic += [PSCustomObject]$trafficDataNat
+                }
+
+                $metricReverseNat = Get-AzMetric -ResourceId $resourceItem.Id -MetricName "TunnelReverseNatedBytes" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime
+                if ($metricReverseNat.Data.Count -gt 0) {
+                    $trafficDataNat = @{
+                        TenantId = $tenantId
+                        TenantName = $tenantName
+                        SubscriptionId = $subscriptionId
+                        SubscriptionName = $subscriptionName
+                        ResourceId = $resourceItem.Id
+                        ResourceType = $resourceItem.Type
+                        ResourceGroup = $resGroup.ResourceGroupName
+                        Location = $resourceItem.Location
+                        Kind = "tunnel" # VPN Gateways are typically of kind "Tunnel"
+                        ResourceName = $resourceItem.Name
+                        Direction = "ReverseNated"
+                        TotalAmounts = "0.00000000" # Placeholder for total amounts
+                        TotalConnections = "0" # Placeholder for total connections
+                        TotalThroughput = "0.00000000" # Placeholder for total throughput
+                    }
+                    $amountNatTotal = 0
+                    $metricReverseNat.Data | ForEach-Object {
+                        $amountNatTotal += $_.Total
+                    }
+                    $trafficDataNat["TotalAmounts"] = "{0:N8}" -f ($amountNatTotal / 1GB)
+                    $dataTraffic += [PSCustomObject]$trafficDataNat
+                }
+
+                $metricBandwidth = Get-AzMetric -ResourceId $resourceItem.Id -MetricName "TunnelAverageBandwidth" -TimeGrain 06:00:00 -StartTime $startTime -EndTime $endTime
+                if ($metricBandwidth.Data.Count -gt 0) {
+                    $trafficDataBandwidth = @{
+                        TenantId = $tenantId
+                        TenantName = $tenantName
+                        SubscriptionId = $subscriptionId
+                        SubscriptionName = $subscriptionName
+                        ResourceId = $resourceItem.Id
+                        ResourceType = $resourceItem.Type
+                        ResourceGroup = $resGroup.ResourceGroupName
+                        Location = $resourceItem.Location
+                        Kind = "tunnel" # VPN Gateways are typically of kind "Tunnel"
+                        ResourceName = $resourceItem.Name
+                        Direction = "Bandwidth"
+                        TotalAmounts = "0.00000000" # Placeholder for total amounts
+                        TotalConnections = "0" # Placeholder for total connections
+                        TotalThroughput = "0.00000000" # Placeholder for total throughput
+                    }
+                    $amountBandwidthTotal = 0
+                    $metricBandwidth.Data | ForEach-Object {
+                        $amountBandwidthTotal += $_.Total
+                    }
+                    $trafficDataBandwidth["TotalThroughput"] = "{0:N8}" -f ($amountBandwidthTotal / $metricBandwidth.Data.Count)
+                    $dataTraffic += [PSCustomObject]$trafficDataBandwidth
                 }
 
             }
@@ -202,7 +262,8 @@ $tenants | ForEach-Object {
         $webApps | ForEach-Object {
             $resourceItem = $_
                 
-            $metricIn = Get-AzMetric -ResourceId $resourceItem.Id -MetricName "BytesReceived" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime -ErrorAction SilentlyContinue
+            $metricIn = Get-AzMetric -ResourceId $resourceItem.Id -MetricName "BytesReceived" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime
+            $amountInTotal = 0
             if ($metricIn.Data.Count -gt 0) {
                 $trafficDataIn = @{
                     TenantId         = $tenantId
@@ -216,17 +277,19 @@ $tenants | ForEach-Object {
                     Kind             = $resourceItem.Kind
                     ResourceName     = $resourceItem.Name
                     Direction        = "Inbound"
+                    TotalAmounts     = "0.00000000" # Placeholder for total amounts
+                    TotalConnections = "0" # Placeholder for total connections
+                    TotalThroughput  = "0.00000000" # Placeholder for total throughput
                 }
-                $amountInTotal = 0
                 $metricIn.Data | ForEach-Object {
-                    $amountIn = $_.Total / 1GB # Convert bytes to GB
-                    $amountInTotal += $amountIn
+                    $amountInTotal += $_.Total
                 }
-                $trafficDataIn["TotalAmounts"] = "{0:N8}" -f $amountInTotal
+                $trafficDataIn["TotalAmounts"] = "{0:N8}" -f ($amountInTotal / 1GB)
                 $dataTraffic += [PSCustomObject]$trafficDataIn
             }
 
-            $metricOut = Get-AzMetric -ResourceId $resourceItem.Id -MetricName "BytesSent" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime -ErrorAction SilentlyContinue
+            $metricOut = Get-AzMetric -ResourceId $resourceItem.Id -MetricName "BytesSent" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime
+            $amountOutTotal = 0
             if ($metricOut.Data.Count -gt 0) {
                 $trafficDataOut = @{
                     TenantId         = $tenantId
@@ -240,15 +303,63 @@ $tenants | ForEach-Object {
                     Kind             = $resourceItem.Kind
                     ResourceName     = $resourceItem.Name
                     Direction        = "Outbound"
+                    TotalAmounts     = "0.00000000" # Placeholder for total amounts
+                    TotalConnections = "0" # Placeholder for total connections
+                    TotalThroughput  = "0.00000000" # Placeholder for total throughput
                 }
-                $amountOutTotal = 0
                 $metricOut.Data | ForEach-Object {
-                    $amountOut = $_.Total / 1GB # Convert bytes to GB
-                    $amountOutTotal += $amountOut
+                    $amountOutTotal += $_.Total
                 }
-                $trafficDataOut["TotalAmounts"] = "{0:N8}" -f $amountOutTotal
+                $trafficDataOut["TotalAmounts"] = "{0:N8}" -f ($amountOutTotal / 1GB)
                 $dataTraffic += [PSCustomObject]$trafficDataOut
             }
+
+            $metricConnections = Get-AzMetric -ResourceId $resourceItem.Id -MetricName "Requests" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime
+            if ($metricConnections.Data.Count -gt 0) {
+                $trafficDataConnections = @{
+                    TenantId         = $tenantId
+                    TenantName       = $tenantName
+                    SubscriptionId   = $subscriptionId
+                    SubscriptionName = $subscriptionName
+                    ResourceId       = $resourceItem.Id
+                    ResourceType     = $resourceItem.Type
+                    ResourceGroup    = $resourceItem.ResourceGroup
+                    Location         = $resourceItem.Location
+                    Kind             = $resourceItem.Kind
+                    ResourceName     = $resourceItem.Name
+                    Direction        = "Connections"
+                    TotalAmounts     = "0.00000000" # Placeholder for total amounts
+                    TotalConnections = "0" # Placeholder for total connections
+                    TotalThroughput  = "0.00000000" # Placeholder for total throughput
+                }
+                $amountConnectionsTotal = 0
+                $metricConnections.Data | ForEach-Object {
+                    $amountConnectionsTotal += $_.Total
+                }
+                $trafficDataConnections["TotalConnections"] = "{0:N0}" -f $amountConnectionsTotal
+                $dataTraffic += [PSCustomObject]$trafficDataConnections
+            }
+
+            $totalAmount = $amountInTotal + $amountOutTotal
+            $totalThroughput = $totalAmount / $difference.TotalSeconds # Calculate throughput in bytes per second
+            $trafficDataConnections = @{
+                TenantId         = $tenantId
+                TenantName       = $tenantName
+                SubscriptionId   = $subscriptionId
+                SubscriptionName = $subscriptionName
+                ResourceId       = $resourceItem.Id
+                ResourceType     = $resourceItem.Type
+                ResourceGroup    = $resourceItem.ResourceGroup
+                Location         = $resourceItem.Location
+                Kind             = $resourceItem.Kind
+                ResourceName     = $resourceItem.Name
+                Direction        = "Bandwidth"
+                TotalAmounts     = "0.00000000" # Placeholder for total amounts
+                TotalConnections = "0" # Placeholder for total connections
+                TotalThroughput  = "{0:N8}" -f $totalThroughput
+            }
+            $dataTraffic += [PSCustomObject]$trafficDataConnections
+
         }
 
         # Get network traffic data for Application Gateways
