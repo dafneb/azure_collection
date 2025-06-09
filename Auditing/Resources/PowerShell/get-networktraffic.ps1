@@ -412,7 +412,7 @@ $tenants | ForEach-Object {
                     SubscriptionName = $subscriptionName
                     ResourceId       = $resourceItem.Id
                     ResourceType     = $resourceItem.Type
-                    ResourceGroup    = $resGroup.ResourceGroupName
+                    ResourceGroup    = $resourceItem.ResourceGroupName
                     Location         = $resourceItem.Location
                     Kind             = ($resourceItem.Kind -ne $null) ? $resourceItem.Kind : ""
                     ResourceName     = $resourceItem.Name
@@ -438,7 +438,7 @@ $tenants | ForEach-Object {
                     SubscriptionName = $subscriptionName
                     ResourceId       = $resourceItem.Id
                     ResourceType     = $resourceItem.Type
-                    ResourceGroup    = $resourceItem.ResourceGroup
+                    ResourceGroup    = $resourceItem.ResourceGroupName
                     Location         = $resourceItem.Location
                     Kind             = ($resourceItem.Kind -ne $null) ? $resourceItem.Kind : ""
                     ResourceName     = $resourceItem.Name
@@ -464,7 +464,7 @@ $tenants | ForEach-Object {
                     SubscriptionName = $subscriptionName
                     ResourceId       = $resourceItem.Id
                     ResourceType     = $resourceItem.Type
-                    ResourceGroup    = $resGroup.ResourceGroupName
+                    ResourceGroup    = $resourceItem.ResourceGroupName
                     Location         = $resourceItem.Location
                     Kind             = ($resourceItem.Kind -ne $null) ? $resourceItem.Kind : ""
                     ResourceName     = $resourceItem.Name
@@ -582,7 +582,7 @@ $tenants | ForEach-Object {
                     SubscriptionName = $subscriptionName
                     ResourceId       = $resourceItem.Id
                     ResourceType     = $resourceItem.Type
-                    ResourceGroup    = $resourceItem.ResourceGroup
+                    ResourceGroup    = $resourceItem.ResourceGroupName
                     Location         = $resourceItem.Location
                     Kind             = ($resourceItem.Kind -ne $null) ? $resourceItem.Kind : ""
                     ResourceName     = $resourceItem.Name
@@ -608,7 +608,7 @@ $tenants | ForEach-Object {
                 SubscriptionName = $subscriptionName
                 ResourceId       = $resourceItem.Id
                 ResourceType     = $resourceItem.Type
-                ResourceGroup    = $resourceItem.ResourceGroup
+                ResourceGroup    = $resourceItem.ResourceGroupName
                 Location         = $resourceItem.Location
                 Kind             = ($resourceItem.Kind -ne $null) ? $resourceItem.Kind : ""
                 ResourceName     = $resourceItem.Name
@@ -660,7 +660,7 @@ $tenants | ForEach-Object {
                 SubscriptionName = $subscriptionName
                 ResourceId       = $resourceItem.Id
                 ResourceType     = $resourceItem.Type
-                ResourceGroup    = $resourceItem.ResourceGroup
+                ResourceGroup    = $resourceItem.ResourceGroupName
                 Location         = $resourceItem.Location
                 Kind             = ($resourceItem.Kind -ne $null) ? $resourceItem.Kind : ""
                 ResourceName     = $resourceItem.Name
@@ -712,7 +712,7 @@ $tenants | ForEach-Object {
                 SubscriptionName = $subscriptionName
                 ResourceId       = $resourceItem.Id
                 ResourceType     = $resourceItem.Type
-                ResourceGroup    = $resourceItem.ResourceGroup
+                ResourceGroup    = $resourceItem.ResourceGroupName
                 Location         = $resourceItem.Location
                 Kind             = ($resourceItem.Kind -ne $null) ? $resourceItem.Kind : ""
                 ResourceName     = $resourceItem.Name
@@ -817,7 +817,7 @@ $tenants | ForEach-Object {
                     SubscriptionName = $subscriptionName
                     ResourceId       = $resourceItem.Id
                     ResourceType     = $resourceItem.Type
-                    ResourceGroup    = $resGroup.ResourceGroupName
+                    ResourceGroup    = $resourceItem.ResourceGroup
                     Location         = $resourceItem.Location
                     Kind             = ($resourceItem.Kind -ne $null) ? $resourceItem.Kind : "tunnel"
                     ResourceName     = $resourceItem.Name
@@ -843,7 +843,7 @@ $tenants | ForEach-Object {
                     SubscriptionName = $subscriptionName
                     ResourceId       = $resourceItem.Id
                     ResourceType     = $resourceItem.Type
-                    ResourceGroup    = $resGroup.ResourceGroupName
+                    ResourceGroup    = $resourceItem.ResourceGroup
                     Location         = $resourceItem.Location
                     Kind             = ($resourceItem.Kind -ne $null) ? $resourceItem.Kind : "tunnel"
                     ResourceName     = $resourceItem.Name
@@ -915,7 +915,7 @@ $tenants | ForEach-Object {
                                 SubscriptionName = $subscriptionName
                                 ResourceId       = $resourceItem.Id
                                 ResourceType     = $resourceItem.Type
-                                ResourceGroup    = $resourceItem.ResourceGroup
+                                ResourceGroup    = $resourceItem.ResourceGroupName
                                 Location         = $resourceItem.Location
                                 Kind             = ($resourceItem.Kind -ne $null) ? $resourceItem.Kind : ""
                                 ResourceName     = $resourceItem.Name
