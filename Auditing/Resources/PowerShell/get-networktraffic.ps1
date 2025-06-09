@@ -108,11 +108,16 @@ $tenants | ForEach-Object {
     $subscriptions | ForEach-Object {
         $subscriptionId = $_.Id
         $subscriptionName = $_.Name
+        $subscriptionState = $_.State
         Write-Host -Message "Processing subscription: $subscriptionName ($subscriptionId)"
+        if ($subscriptionState -eq "Disabled") {
+            Write-Warning -Message "Subscription $subscriptionName ($subscriptionId) is Disabled, skipping ..."
+            return
+        }
         Set-AzContext -SubscriptionId $subscriptionId -TenantId $tenantId -ErrorAction SilentlyContinue | Out-Null
         if (-not (Get-AzContext)) {
             Write-Warning -Message "Failed to set context for subscription $subscriptionName ($subscriptionId)"
-            continue
+            return
         }
 
         $resourceGroups = Get-AzResourceGroup -ErrorAction SilentlyContinue
@@ -538,7 +543,7 @@ $tenants | ForEach-Object {
                 $metricIn.Data | ForEach-Object {
                     $amountInTotal += $_.Total
                 }
-                $trafficDataIn["TotalAmounts"] = "{0:N8}" -f ( / 1GB)
+                $trafficDataIn["TotalAmounts"] = "{0:N8}" -f ($amountInTotal / 1GB)
                 $dataTraffic += [PSCustomObject]$trafficDataIn
             }
 
@@ -876,7 +881,8 @@ $tenants | ForEach-Object {
                                 $resourceItem = $_
                             }
 
-                            $metricOut = Get-AzMetric -ResourceId $resourceItem.Id -MetricName "ByteCount" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime -ErrorAction SilentlyContinue
+                            $metricOut = Get-AzMetric -ResourceId $resourceItem.Id -MetricName "ByteCount" -TimeGrain 01:00:00:00 -StartTime $startTime -EndTime $endTime
+                            $amountOutTotal = 0
                             if ($metricOut.Data.Count -gt 0) {
                                 $trafficDataOut = @{
                                     TenantId         = $tenantId
@@ -894,21 +900,37 @@ $tenants | ForEach-Object {
                                     TotalConnections = "0" # Placeholder for total connections
                                     TotalThroughput  = "0.00000000" # Placeholder for total throughput
                                 }
-                                $amountOutTotal = 0
                                 $metricOut.Data | ForEach-Object {
-                                    $amountOut = $_.Total / 1GB # Convert bytes to GB
-                                    $amountOutTotal += $amountOut
+                                    $amountOutTotal += $_.Total
                                 }
-                                $trafficDataOut["TotalAmounts"] = "{0:N8}" -f $amountOutTotal
+                                $trafficDataOut["TotalAmounts"] = "{0:N8}" -f ($amountOutTotal / 1GB)
                                 $dataTraffic += [PSCustomObject]$trafficDataOut
                             }
+
+                            $totalThroughput = $amountOutTotal / $difference.TotalSeconds # Calculate throughput in bytes per second
+                            $trafficDataThroughput = @{
+                                TenantId         = $tenantId
+                                TenantName       = $tenantName
+                                SubscriptionId   = $subscriptionId
+                                SubscriptionName = $subscriptionName
+                                ResourceId       = $resourceItem.Id
+                                ResourceType     = $resourceItem.Type
+                                ResourceGroup    = $resourceItem.ResourceGroup
+                                Location         = $resourceItem.Location
+                                Kind             = ($resourceItem.Kind -ne $null) ? $resourceItem.Kind : ""
+                                ResourceName     = $resourceItem.Name
+                                Direction        = "Bandwidth"
+                                TotalAmounts     = "0.00000000" # Placeholder for total amounts
+                                TotalConnections = "0" # Placeholder for total connections
+                                TotalThroughput  = "{0:N8}" -f $totalThroughput
+                            }
+                            $dataTraffic += [PSCustomObject]$trafficDataThroughput
+
                         }
                     }
                 }
             }
-
         }
-
     }
 }
 
