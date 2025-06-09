@@ -9,11 +9,7 @@
 
 .PARAMETER CaseName
     The name of the case folder where the inventory will be saved.
-    The default value is "case-name".
     The case name will be normalized to lowercase and invalid characters will be replaced with underscores.
-
-.PARAMETER Append
-    If specified, the script will append the role assignments to an existing CSV file instead of creating a new one.
 
 .EXAMPLE
     ./get-roleassignment.ps1 -CaseName "MyCase"
@@ -25,20 +21,16 @@
     The script requires appropriate permissions to access resource data in Azure.
 
     Author: David Burel (@dafneb)
-    Date: April 29, 2025
-    Version: 1.0.0
+    Date: June 9, 2025
+    Version: 1.0.1
 #>
 
 # Define the script's parameters
 [CmdletBinding(DefaultParameterSetName = "Default")]
 param (
     [Parameter(Mandatory = $true, ParameterSetName = "Default")]
-    [Parameter(Mandatory = $true, ParameterSetName = "Append")]
     [ValidateNotNullOrEmpty()]
-    [string]$CaseName,
-
-    [Parameter(Mandatory = $true, ParameterSetName = "Append")]
-    [switch]$Append
+    [string]$CaseName
 )
 
 $timeStart = Get-Date
@@ -86,7 +78,7 @@ $caseFolderPath = Join-Path -Path $baseFolderPath -ChildPath "$($caseFolderName)
 $roleFilePath = Join-Path -Path $caseFolderPath -ChildPath "roleassignment.csv"
 $pimFilePath = Join-Path -Path $caseFolderPath -ChildPath "roleassignment-pim.csv"
 
-Write-Verbose -Message "Checking folders (1/2) ..."
+Write-Verbose -Message "Checking folders and files ..."
 
 # Create case folder if it doesn't exist
 if (-not (Test-Path -Path $baseFolderPath)) {
@@ -100,19 +92,22 @@ if (-not (Test-Path -Path $caseFolderPath)) {
     New-Item -ItemType Directory -Path $caseFolderPath | Out-Null
 }
 
-# Check if the inventory file already exists
+# Check if the role file already exists
 if (Test-Path -Path $roleFilePath) {
-    if (-not $Append) {
-        Write-Verbose -Message "Inventory file already exists, deleting it ..."
-        Remove-Item -Path $roleFilePath -Force
-    } else {
-        Write-Verbose -Message "Appending to existing file ..."
-    }
+    Write-Verbose -Message "Role file already exists, deleting it ..."
+    Remove-Item -Path $roleFilePath -Force
+}
+
+# Check if the PIM file already exists
+if (Test-Path -Path $pimFilePath) {
+    Write-Verbose -Message "PIM file already exists, deleting it ..."
+    Remove-Item -Path $pimFilePath -Force
 }
 
 Write-Verbose -Message "Listing roles from Azure ..."
 
 $dataRoles = @()
+$dataPims = @()
 
 $tenants = Get-AzTenant -ErrorAction SilentlyContinue
 if (-not $tenants) {
@@ -121,7 +116,7 @@ if (-not $tenants) {
 $tenants | ForEach-Object {
     $tenantId = $_.Id
     $tenantName = $_.Name
-    Write-Verbose -Message "Processing tenant: $tenantName ($tenantId)"
+    Write-Output "Processing tenant: $tenantName ($tenantId)"
 
     # Get all subscriptions for the tenant
     $subscriptions = Get-AzSubscription -TenantId $tenantId -ErrorAction SilentlyContinue
@@ -131,11 +126,18 @@ $tenants | ForEach-Object {
     $subscriptions | ForEach-Object {
         $subscriptionId = $_.Id
         $subscriptionName = $_.Name
-        Write-Verbose -Message "Processing subscription: $subscriptionName ($subscriptionId)"
+        $subscriptionState = $_.State
+        Write-Output "Processing subscription: $subscriptionName ($subscriptionId)"
+
+        # Skip if the subscription is disabled
+        if ($subscriptionState -eq "Disabled") {
+            Write-Warning -Message "Subscription $subscriptionName ($subscriptionId) is Disabled, skipping ..."
+            return
+        }
         Set-AzContext -SubscriptionId $subscriptionId -TenantId $tenantId -ErrorAction SilentlyContinue | Out-Null
         if (-not (Get-AzContext)) {
             Write-Warning -Message "Failed to set context for subscription $subscriptionName ($subscriptionId)"
-            continue
+            return
         }
 
         # Get all role assignments for the subscription
@@ -164,14 +166,9 @@ $tenants | ForEach-Object {
     }
 }
 
-Write-Verbose -Message "Exporting roles to CSV file ..."
-if ($Append) {
-    Write-Verbose -Message "Appending to existing file ..."
-    $dataRoles | Export-Csv -Path $roleFilePath -NoTypeInformation -Force -Encoding UTF8 -Append
-} else {
-    Write-Verbose -Message "Creating new file ..."
-    $dataRoles | Export-Csv -Path $roleFilePath -NoTypeInformation -Force -Encoding UTF8
-}
+Write-Output -Message "Exporting roles to CSV file ..."
+$dataRoles | Export-Csv -Path $roleFilePath -NoTypeInformation -Force -Encoding UTF8
+$dataPims | Export-Csv -Path $pimFilePath -NoTypeInformation -Force -Encoding UTF8
 
 # Get actual date and time ...
 $timeEnd = Get-Date

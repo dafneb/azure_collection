@@ -1,4 +1,26 @@
 <#
+.SYNOPSIS
+    This script retrieves network traffic data from Azure resources such as Virtual Network Gateways, Web Apps, Application Gateways, NAT Gateways, and Container Apps.
+
+.DESCRIPTION
+    The script connects to Azure, retrieves network traffic metrics for various resources, and outputs the data in a structured format. It supports multiple tenants and subscriptions, and it can handle different types of resources.
+
+.PARAMETER CaseName
+    The name of the case folder where the inventory will be saved.
+    The case name will be normalized to lowercase and invalid characters will be replaced with underscores.
+
+.EXAMPLE
+    ./get-networktraffic.ps1 -CaseName "MyNetworkTrafficCase"
+    This command will create a case folder named "mynetworktrafficcase" in the case directory and retrieve network traffic data for Azure resources, saving the results in a CSV file within that folder.
+
+.NOTES
+    This script requires PowerShell 7.4 or higher.
+    Ensure that the Microsoft Az PowerShell module is installed before running the script.
+    The script requires appropriate permissions to access resource data in Azure.
+
+    Author: David Burel (@dafneb)
+    Date: June 9, 2025
+    Version: 1.0.0
 #>
 
 # Define the script's parameters
@@ -54,7 +76,7 @@ $baseFolderPath = Join-Path -Path (Get-Location) -ChildPath "case"
 $caseFolderPath = Join-Path -Path $baseFolderPath -ChildPath "$($caseFolderName)"
 $trafficFilePath = Join-Path -Path $caseFolderPath -ChildPath "network-traffic.csv"
 
-Write-Verbose -Message "Checking folders (1/2) ..."
+Write-Verbose -Message "Checking folders and files ..."
 
 # Create case folder if it doesn't exist
 if (-not (Test-Path -Path $baseFolderPath)) {
@@ -85,11 +107,11 @@ $days = 30 # Define the number of days for which to retrieve traffic data
 $endTime = Get-Date -Date "2025-05-20T00:00:00"
 $startTime = $endTime.AddDays(-$days) # Adjust the time range as needed
 $difference = New-TimeSpan -End $endTime -Start $startTime
-Write-Host -Message "Time range for traffic data: $($startTime) to $($endTime) ..."
-Write-Host -Message "... TotalDays: $($difference.TotalDays) days"
-Write-Host -Message "... TotalHours: $($difference.TotalHours) hours"
-Write-Host -Message "... TotalMinutes: $($difference.TotalMinutes) minutes"
-Write-Host -Message "... TotalSeconds: $($difference.TotalSeconds) seconds"
+Write-Output "Time range for traffic data: $($startTime) to $($endTime) ..."
+Write-Output "... TotalDays: $($difference.TotalDays) days"
+Write-Output "... TotalHours: $($difference.TotalHours) hours"
+Write-Output "... TotalMinutes: $($difference.TotalMinutes) minutes"
+Write-Output "... TotalSeconds: $($difference.TotalSeconds) seconds"
 
 $tenants = Get-AzTenant -ErrorAction SilentlyContinue
 if (-not $tenants) {
@@ -98,7 +120,7 @@ if (-not $tenants) {
 $tenants | ForEach-Object {
     $tenantId = $_.Id
     $tenantName = $_.Name
-    Write-Host -Message "Processing tenant: $tenantName ($tenantId)"
+    Write-Output "Processing tenant: $tenantName ($tenantId)"
 
     # Get all subscriptions for the tenant
     $subscriptions = Get-AzSubscription -TenantId $tenantId -ErrorAction SilentlyContinue
@@ -109,7 +131,8 @@ $tenants | ForEach-Object {
         $subscriptionId = $_.Id
         $subscriptionName = $_.Name
         $subscriptionState = $_.State
-        Write-Host -Message "Processing subscription: $subscriptionName ($subscriptionId)"
+        Write-Output "Processing subscription: $subscriptionName ($subscriptionId)"
+
         if ($subscriptionState -eq "Disabled") {
             Write-Warning -Message "Subscription $subscriptionName ($subscriptionId) is Disabled, skipping ..."
             return
@@ -876,6 +899,9 @@ $tenants | ForEach-Object {
                     $nic.IpConfigurations | ForEach-Object {
                         $ipConfig = $_
                         $ipConfig.PublicIpAddress | ForEach-Object {
+                            if ($_.Id -eq $null) {
+                                return
+                            }
                             $resourceItem = Get-AzResource -ResourceId $_.Id
                             if (-not $resourceItem) {
                                 $resourceItem = $_
@@ -934,6 +960,7 @@ $tenants | ForEach-Object {
     }
 }
 
+Write-Output "Exporting data to files ..."
 $dataTraffic | Export-Csv -Path $trafficFilePath -NoTypeInformation -Encoding UTF8 -Force
 
 # Get actual date and time ...
