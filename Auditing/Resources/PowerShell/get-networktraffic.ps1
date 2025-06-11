@@ -9,6 +9,12 @@
     The name of the case folder where the inventory will be saved.
     The case name will be normalized to lowercase and invalid characters will be replaced with underscores.
 
+.PARAMETER EndTime
+    The end time for the traffic data retrieval. Default is the current date and time.
+
+.PARAMETER StartTime
+    The start time for the traffic data retrieval. Default is 30 days before the current date and time.
+
 .EXAMPLE
     ./get-networktraffic.ps1 -CaseName "MyNetworkTrafficCase"
     This command will create a case folder named "mynetworktrafficcase" in the case directory and retrieve network traffic data for Azure resources, saving the results in a CSV file within that folder.
@@ -19,8 +25,8 @@
     The script requires appropriate permissions to access resource data in Azure.
 
     Author: David Burel (@dafneb)
-    Date: June 9, 2025
-    Version: 1.0.0
+    Date: June 11, 2025
+    Version: 1.0.1
 #>
 
 # Define the script's parameters
@@ -28,7 +34,15 @@
 param (
     [Parameter(Mandatory = $true, ParameterSetName = "Default")]
     [ValidateNotNullOrEmpty()]
-    [string]$CaseName
+    [string]$CaseName,
+
+    [Parameter(Mandatory = $false, ParameterSetName = "Default")]
+    [ValidateNotNullOrEmpty()]
+    [datetime]$EndTime = (Get-Date),
+
+    [Parameter(Mandatory = $false, ParameterSetName = "Default")]
+    [ValidateNotNullOrEmpty()]
+    [datetime]$StartTime = (Get-Date).AddDays(-30)
 
 )
 
@@ -103,9 +117,6 @@ else {
 Write-Verbose -Message "Listing traffic data from Azure ..."
 
 $dataTraffic = @()
-$days = 30 # Define the number of days for which to retrieve traffic data
-$endTime = Get-Date -Date "2025-05-20T00:00:00"
-$startTime = $endTime.AddDays(-$days) # Adjust the time range as needed
 $difference = New-TimeSpan -End $endTime -Start $startTime
 Write-Output "Time range for traffic data: $($startTime) to $($endTime) ..."
 Write-Output "... TotalDays: $($difference.TotalDays) days"
