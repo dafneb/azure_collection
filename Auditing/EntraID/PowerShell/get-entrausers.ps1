@@ -21,9 +21,9 @@ param (
     [Parameter(Mandatory = $true, ParameterSetName = "InactGuests")]
     [switch]$InactiveGuests,
 
-    [Parameter(Mandatory = $true, ParameterSetName = "InactMembers")]
-    [Parameter(Mandatory = $true, ParameterSetName = "InactGuests")]
-    [Parameter(Mandatory = $true, ParameterSetName = "AllDetails")]
+    [Parameter(Mandatory = $false, ParameterSetName = "InactMembers")]
+    [Parameter(Mandatory = $false, ParameterSetName = "InactGuests")]
+    [Parameter(Mandatory = $false, ParameterSetName = "AllDetails")]
     [ValidateRange(1, [int]::MaxValue)]
     [int]$InactiveDays = 90,
 
